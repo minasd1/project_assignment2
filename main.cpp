@@ -7,6 +7,9 @@
 
 #include "vector_ops.h"
 #include "file_functions.h"
+#include "hashTable.h"
+#include "hypercube.h"
+#include "hamming_distance.h"
 
 
 int main(int argc, char* argv[]){
@@ -41,6 +44,7 @@ int main(int argc, char* argv[]){
     int id;
     vector<double> values;
     int count = 0;
+    string algorithm;
 
     unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
     default_random_engine generator(seed);
@@ -57,7 +61,7 @@ int main(int argc, char* argv[]){
 
         start = 0;
         while(start < line.size()){                         //TOKENIZE EVERY LINE IN IT'S SEPERATED STRINGS
-            finish = line.find_first_of('\t', start);//prin itan ' '
+            finish = line.find_first_of('\t', start);
 
             if(finish == string::npos){
 
@@ -67,7 +71,7 @@ int main(int argc, char* argv[]){
             if(start < line.size() - 1){
                 token = line.substr(start, finish - start);
                 if(start == 0){
-                    
+
                     name_and_id = make_pair(token, count);  //ASSIGN NAME TO AN INCREASING ID
                 }
                 else{
@@ -91,6 +95,7 @@ int main(int argc, char* argv[]){
 
         count++;
     }
+
 
 
     
