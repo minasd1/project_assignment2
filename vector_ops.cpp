@@ -35,14 +35,14 @@ void curve_vector_print_values(){
 }
 
 //INITIALIZE THE CURVES ID VECTOR
-void curves_ID_initialize(int num_of_curves, int L){
+void curves_ID_vector_initialize(int num_of_curves, int L){
 
     curves_ID_vector.resize(num_of_curves, vector<int>(L));
 }
 
 //INSERT CURVE'S ID VALUES TO ID VECTOR
 //INDEX VALUE IS THE ID VALUE OF THE CURVE (KEY)
-void curves_ID_insert(int index_value, vector<int>& curve_id_values){
+void curves_ID_vector_insert(int index_value, vector<int>& curve_id_values){
 
     for(int i = 0; i < curves_ID_vector[index_value].size(); i++){
 
@@ -53,7 +53,7 @@ void curves_ID_insert(int index_value, vector<int>& curve_id_values){
 //GET ID VALUE OF A CURVE CORRESPONDING TO A SPECIFIC HASHTABLE
 //K IS THE HASHTABLE THAT CONCERNS US - (NUMBER OF G-FUNCTION USED IN THIS HASHTABLE ({0,1,...,L}))
 //INDEX VALUE IS THE KEY VALUE OF THE CURVE
-int curves_ID_get_curve_value(int index_value, int k){
+int curves_ID_vector_get_curve_value(int index_value, int k){
 
     int id_value;
     id_value = curves_ID_vector[index_value][k];

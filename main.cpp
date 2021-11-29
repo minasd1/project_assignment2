@@ -8,14 +8,12 @@
 #include "vector_ops.h"
 #include "file_functions.h"
 #include "hashTable.h"
-#include "hypercube.h"
-#include "hamming_distance.h"
 
 
 int main(int argc, char* argv[]){
 
     int k ;                         //NUMBER OF H FUNCTIONS USED IN FUNCTION G
-    int L ;                         //NUMBER OF HASHTABLES(LSH)
+    int L = 5;                      //NUMBER OF HASHTABLES(LSH)
     int N ;                         //NUMBER OF NEAREST MEIGHBORS
     float R ;                       //SEARCH RADIUS
     int probes ;                    //MAX NUMBER OF HYPERCUBE VERTICES TO BE CHECKED
@@ -96,7 +94,10 @@ int main(int argc, char* argv[]){
         count++;
     }
 
+    curves_ID_vector_initialize(number_of_curves, L);
 
+    //NUMBER OF BUCKETS IN EACH HASHTABLE
+    buckets = number_of_curves/curves_divider;
 
     
     return 0;
