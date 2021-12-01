@@ -7,9 +7,9 @@ void hashTable_initialization(int num_of_hashTables, int num_of_buckets){
     //IT CAN ALSO BE INITIALIZED AS ZERO
 }
 
-//PUSH A CURVE'S ID VALUE TO A BUCKET OF EACH OF THE HASHTABLES USING G FUNCTION 
+//PUSH A CURVE'S ID VALUES TO A BUCKET OF EACH OF THE HASHTABLES USING G FUNCTION
 //EACH BUCKET IS INDICATED BY THE INT VALUES PRODUCED BY FUNCTION G
-void hashTable_push_back(vector<int>& g, int key_val){
+void hashTable_push_back_lsh(vector<int>& g, int key_val){
 
     for(int i = 0; i < HashTables.size(); i++){
         HashTables[i][g[i]].push_back(key_val);
@@ -17,8 +17,17 @@ void hashTable_push_back(vector<int>& g, int key_val){
     }
 }
 
+//PUSH A CURVE'S ID VALUE TO A BUCKET OF THE HASHTABLES THAT THE HASH_GRID CORRESPONDS
+//USING G FUNCTION
+//THE BUCKET IS INDICATED BY THE INT VALUES PRODUCED BY FUNCTION G
+void hashTable_push_back_frechet(int& g, int key_val, int grid){
+
+        HashTables[grid-1][g].push_back(key_val);
+        //HashTables[i][g[i]].end() = key_val;
+}
+
 //GET KEY VALUES OF ALL THE CURVES OF A BUCKET OF EACH HASH TABLE
-//EACH BUCKET IS INDICATED BY THE INT VALUES PRODUCED BY FUNCTION G 
+//EACH BUCKET IS INDICATED BY THE INT VALUES PRODUCED BY FUNCTION G
 vector<int> hashTable_get_curves_in_buckets(vector<int>& g){
 
     vector<int> points_in_buckets;
@@ -66,4 +75,28 @@ void hashTable_print_data(){
     cout << "Hashtable size is: " << HashTables.size() << endl;
     cout << "buckets of each hashtable are: " << HashTables[0].size() << endl;
     cout << "elements in each bucket are: " << HashTables[0][0].size() << endl;
+}
+
+//PRINTS HASHTABLE - USED FOR CHECKING PORPUSES
+void hashTable_print(){
+    int sum= 0;
+    for (int i = 0; i < HashTables.size(); i++) {
+        cout << "HASH TABLE NUMBER " << i+1 << endl;
+        cout << "(size: " << HashTables[i].size() << ")" << endl;
+        cout << "---------------------" << endl << endl;
+        for (int j = 0; j < HashTables[i].size(); j++){
+            cout << "Bucket " << j << endl;
+            cout << "(size: " << HashTables[i][j].size() << ")" << endl;
+            sum+= HashTables[i][j].size();
+            cout << "Contains (curve ids): ";
+            for(int k = 0; k < HashTables[i][j].size(); k++){
+                cout<< HashTables[i][j][k] << " ";
+            }
+            cout << endl;
+        }
+        cout << endl;
+    }
+    cout << "Total number of hash tables: " << HashTables.size() << endl;
+    cout << "Each hash table has: " << HashTables[0].size() << " buckets" << endl;
+    cout << "Mean bucket size is: " << sum/(HashTables.size() * HashTables[0].size()) << endl;
 }
