@@ -9,6 +9,7 @@
 #include <chrono>
 #include <limits>
 #include <algorithm>
+#include <initializer_list>
 
 #include "hash_functions.h"
 
@@ -43,6 +44,9 @@ void v_vectors_printdata(vector<vector<int>>& v_vectors);
 void create_vector_t(vector<float>& t, int k, int w, std::default_random_engine& generator);
 void print_vector_t(vector<float>& t);
 void create_vector_int(vector<int>& ints, int k, int w, std::default_random_engine& generator);
+
+/*--------------------OPERATIONS BETWEEN CURVES FUNCTIONS-----------------*/
+double curve_calculate_dfd(const pair<pair<string, int>, vector<double>>& curve1, const pair<pair<string, int>, vector<double>>& curve2);
 
 /*--------------------OPERATIONS BETWEEN VECTORS FUNCTIONS-----------------*/
 int calculate_dot_product(const pair<pair<string, int>, vector<double>>& curve, vector <int>& d_vector);

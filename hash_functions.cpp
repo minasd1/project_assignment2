@@ -305,9 +305,9 @@ void G_Frechet::padding(vector<double>& snapped_curve){
     double padding_value = 500.0;
 
     //IF SNAPPED CURVE HAS LESS THAN LESS THAN THE MAXIMUM VALUES
-    if(snapped_curve.size() < num_of_grid_values){
+    if(snapped_curve.size() < 2*num_of_grid_values){
 
-        for(int i = snapped_curve.size(); i < num_of_grid_values; i++){
+        for(int i = snapped_curve.size(); i < 2*num_of_grid_values; i++){
             //FILL WITH A VERY LARGE VALUE UNTIL MAXIMUM SIZE IS REACHED
             snapped_curve.push_back(padding_value);
         }

@@ -143,6 +143,49 @@ void print_vector_t(vector<float>& t){
     cout << endl;
 }
 
+//CALCULATE DISCRETE FRECHET DISTANCE BETWEEN TWO CURVES
+double curve_calculate_dfd(const pair<pair<string, int>, vector<double>>& curve1, const pair<pair<string, int>, vector<double>>& curve2){
+    vector<vector<double>> DFD;     //ARRAY THAT KEEPS DISCRETE FRECHET DISTANCE FOR EVERY POSSIBLE TRAVERSAL
+    vector<double> point1, point2;  //CURVE POINTS
+    int num_of_points = curve1.second.size();
+
+    DFD.resize(num_of_points, vector<double>(num_of_points));
+    
+    //FOR ALL THE VERTICES OF CURVE 1
+    for(int i = 0; i < num_of_points; i++){
+        //PAIR THEIR X AND Y VALUES
+        point1.push_back(i);
+        point1.push_back(curve1.second[i]);
+
+        //FOR ALL THE VERTICES IN CURVE 2
+        for(int j = 0; j < num_of_points; j++){
+            //DO THE SAME
+            point2.push_back(j);
+            point2.push_back(curve2.second[j]);
+
+            if(i == 0 && j == 0){   //FIRST ELEMENT OF THE ARRAY
+                DFD[i][j] = calculate_distance(point1, point2);
+            }
+            else if(i == 0){        //FIRST ROW OF THE ARRAY
+                DFD[i][j] = max(DFD[i][j-1], calculate_distance(point1, point2));
+            }
+            else if(j == 0){        //FIRST COLUMN OF THE ARRAY
+                DFD[i][j] = max(DFD[i-1][j], calculate_distance(point1,point2));
+            }
+            else{                   //RANDOM ARRAY INDEX
+                DFD[i][j] = max(min({DFD[i-1][j], DFD[i-1][j-1], DFD[i][j-1]}), calculate_distance(point1, point2));
+            }
+
+            point2.clear();
+        }
+
+        point1.clear();
+    }
+
+    return DFD[num_of_points-1][num_of_points-1];
+
+}
+
 //CALCULATE DOT PRODUCT OF TWO VECTORS
 int calculate_dot_product(const pair<pair<string, int>, vector<double>>& curve, vector <int>& d_vector){
     double product = 0.0;
