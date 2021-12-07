@@ -5,7 +5,6 @@
 #include "vector_ops.h"
 #include "mod.h"
 #include "hashTable.h"
-#include "hypercube.h"
 
 //CONSTRUCTOR OF ALL THE G FUNCTIONS
 //GENERATES THE RANDOM V_VECTOR AND t FLOATS USED IN H FUNCTION
@@ -91,13 +90,9 @@ void G_Lsh::hash(const pair<pair<string, int>, vector<double>>& curve, vector<in
     for (i=0; i< curve_id_values.size() ; i++) {
         curve_hash_values.push_back(mod(curve_id_values[i], table_size));
     }
-    if (!is_query){
-    	if (frechet_grid != 0) {
-    		hashTable_push_back_frechet(curve_hash_values[0], curve.first.second, frechet_grid);
-		}
-		else {
-			hashTable_push_back_lsh(curve_hash_values, curve.first.second);
-		}
+    if (!is_query && !frechet_grid){
+    	
+		hashTable_push_back(curve_hash_values, curve.first.second);
 
     }
     else {
@@ -177,3 +172,144 @@ void G_Hypercube::hash(const vector<int>& point, unsigned int& hash_value, bool 
     }
 }
 */
+
+//GENERATES VECTOR OF FLOATS USED IN GRID CURVE
+G_Frechet::G_Frechet(G_Lsh g_func, engine gen, int L_num, double delta_value, int num_grid_values)
+    :g(g_func), generator(gen), L(L_num), delta(delta_value), num_of_grid_values(num_grid_values)
+{
+    //INITIALIZE A FLOAT VECTOR TO DISTORT THE GRID CURVE
+    //create_vector_t(t, num_of_grid_values, delta, generator);
+
+} 
+
+void G_Frechet::hash(const pair<pair<string, int>, vector<double>>& curve, vector<int>& hash_vector, bool is_query)
+{
+
+    pair<pair<string, int>, vector<double>> snapped_curve;
+    vector<int> hash_values;
+
+    //SNAPPED CURVE MUST HAVE THE SAME STRING AND ID VALUE WITH THE INITIAL CURVE
+    snapped_curve.first.first = curve.first.first;
+    snapped_curve.first.second = curve.first.second;
+
+    //FOR EVERY HASHTABLE
+    for(int i = 1; i <= L; i++){
+        //PRODUCE A GRID
+        create_vector_t(t, num_of_grid_values, delta, generator);
+
+        //SNAP CURVE TO CURRENT GRID
+        snap_to_grid(curve, snapped_curve.second); //snapped_curve
+        padding(snapped_curve.second);
+
+        //GET THE BUCKET THAT CURVE MUST BE INSERTED
+        g.hash(snapped_curve, hash_values, 0, i);       //i CAN POSSIBLY BE A  BOOLEAN FLAG
+        //AND ADD IT TO CURVE'S HASH VALUES
+        hash_vector.push_back(hash_values[0]);
+
+        snapped_curve.second.clear();
+    }
+    
+    //INSERT CURVE'S ID TO EACH ONE OF THE L HASHTABLES INDICATED BY THE HASH_VECTOR
+    hashTable_push_back(hash_vector, curve.first.second);
+
+    hash_vector.clear();
+}
+
+//GET A CURVE FROM INPUT AND SNAP IT TO GRID
+//GET THE SNAPPED CURVE PRODUCED IN THE PROCESS
+void G_Frechet::snap_to_grid(const pair<pair<string, int>, vector<double>>& curve, vector<double>& snapped_curve)
+{
+    double delta_multiple, previous_delta_multiple;                     
+    double previous_distance, current_distance;
+    double grid_previous_x_value, grid_previous_y_value;
+    double grid_current_x_value = 0, grid_current_y_value = 0;
+    double curve_current_x_value;
+    int count;
+
+    //FOR ALL THE CURVE'S VERTICES
+    for(int i = 0; i < curve.second.size(); i++){
+        
+        count = 0;
+        delta_multiple = t[count];  //GRID COORDINATES ARE DISTORTED BY VECTOR t SO INSTEAD
+                                    //OF ZERO THE FIRST VALUE OF delta_multiple IS t[0]
+        previous_delta_multiple = delta_multiple;
+        curve_current_x_value = i;
+
+        //SNAP CURVE'S CURRENT X_VALUE TO AN X_VALUE OF THE GRID
+        current_distance = abs(curve_current_x_value - delta_multiple);
+        previous_distance = current_distance;
+
+        //WHILE DISTANCE BETWEEN CURVE'S AND GRID'S CURRENT X_VALUE KEEPS DECREASING
+        //OR IS NOT ZERO
+        while((current_distance <= previous_distance) && (current_distance != 0)){
+            count++;
+            previous_delta_multiple = delta_multiple;
+            //GO TO THE NEXT X_VALUE OF GRID CURVE
+            delta_multiple += (delta+t[count]);       
+
+            previous_distance = current_distance;
+            current_distance = abs(curve_current_x_value - delta_multiple); 
+        }
+        
+        //KEEP TRACK OF THE PREVIOUS GRID X VALUE - NEEDED TO AVOID DUPLICATES
+        grid_previous_x_value = grid_current_x_value;
+        //SNAP CURVE'S CURRENT X COORDINATE TO CLOSEST GRID X VALUE
+        grid_current_x_value = previous_delta_multiple;
+
+        count = 0;
+        delta_multiple = t[count];
+        previous_delta_multiple = delta_multiple;
+
+        //DO THE SAME THING FOR CURVE'S CURRENT Y COORDINATE
+        current_distance = abs(curve.second[i] - delta_multiple);
+        previous_distance = current_distance;
+
+        while((current_distance <= previous_distance) && (current_distance != 0)){
+            count++;
+
+            previous_delta_multiple = delta_multiple;
+            delta_multiple += (delta+t[count]);                      
+
+            previous_distance = current_distance;
+            current_distance = abs(curve.second[i] - delta_multiple);
+        }
+
+        //KEEP TRACK OF THE PREVIOUS GRID Y VALUE - NEEDED TO AVOID DUPLICATES
+        grid_previous_y_value = grid_current_y_value;
+        //SNAP CURVE'S CURRENT Y COORDINATE TO CLOSEST GRID Y VALUE
+        grid_current_y_value = previous_delta_multiple;
+        
+        //IF AT LEAST ONE CURVE VERTICE HAS BEEN ASSIGNED TO THE PROPER GRID VERTICE
+        if(snapped_curve.size() >= 2){
+
+            //AVOID CONSECUTIVE DUPLICATES OF GRID VERTICES WHILE SNAPPING CURVE
+            if((grid_previous_x_value != grid_current_x_value) || (grid_previous_y_value != grid_current_y_value)){
+                //APPEND GRID'S CLOSEST (X,Y) COORDINATES TO CURRENT CURVE'S COORDINATES TO SNAPPED_CURVE
+                snapped_curve.push_back(grid_current_x_value);
+                snapped_curve.push_back(grid_current_y_value);
+            }
+        }
+        else{   //THE FIRST GRID VERTICE TO BE INSERTED TO GRID CURVE VALUES
+
+            snapped_curve.push_back(grid_current_x_value);
+            snapped_curve.push_back(grid_current_y_value);
+        }
+
+    }
+}
+
+//GET CURVE AFTER SNAPPING TO GRID
+//ADD WITH A LARGE VALUE UNTIL MAXIMUM SIZE IS REACHED
+void G_Frechet::padding(vector<double>& snapped_curve){
+
+    double padding_value = 500.0;
+
+    //IF SNAPPED CURVE HAS LESS THAN LESS THAN THE MAXIMUM VALUES
+    if(snapped_curve.size() < num_of_grid_values){
+
+        for(int i = snapped_curve.size(); i < num_of_grid_values; i++){
+            //FILL WITH A VERY LARGE VALUE UNTIL MAXIMUM SIZE IS REACHED
+            snapped_curve.push_back(padding_value);
+        }
+    }
+}

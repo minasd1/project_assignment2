@@ -1,6 +1,6 @@
 OBJS = $(patsubst %.cpp, %.o, $(wildcard *.cpp))
 HEADER = $(wildcard *.h)
-TARGET = main
+TARGET = search
 CC = g++
 CFLAGS = -O3 -g -Wall
 

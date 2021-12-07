@@ -9,7 +9,7 @@ void hashTable_initialization(int num_of_hashTables, int num_of_buckets){
 
 //PUSH A CURVE'S ID VALUES TO A BUCKET OF EACH OF THE HASHTABLES USING G FUNCTION
 //EACH BUCKET IS INDICATED BY THE INT VALUES PRODUCED BY FUNCTION G
-void hashTable_push_back_lsh(vector<int>& g, int key_val){
+void hashTable_push_back(vector<int>& g, int key_val){
 
     for(int i = 0; i < HashTables.size(); i++){
         HashTables[i][g[i]].push_back(key_val);
@@ -20,11 +20,11 @@ void hashTable_push_back_lsh(vector<int>& g, int key_val){
 //PUSH A CURVE'S ID VALUE TO A BUCKET OF THE HASHTABLES THAT THE HASH_GRID CORRESPONDS
 //USING G FUNCTION
 //THE BUCKET IS INDICATED BY THE INT VALUES PRODUCED BY FUNCTION G
-void hashTable_push_back_frechet(int& g, int key_val, int grid){
+// void hashTable_push_back_frechet(int& g, int key_val, int grid){
 
-        HashTables[grid-1][g].push_back(key_val);
-        //HashTables[i][g[i]].end() = key_val;
-}
+//         HashTables[grid-1][g].push_back(key_val);
+//         //HashTables[i][g[i]].end() = key_val;
+// }
 
 //GET KEY VALUES OF ALL THE CURVES OF A BUCKET OF EACH HASH TABLE
 //EACH BUCKET IS INDICATED BY THE INT VALUES PRODUCED BY FUNCTION G

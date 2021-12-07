@@ -10,7 +10,7 @@ using namespace std;
 static vector<vector <vector <int> > > HashTables;  //DECLARE A VECTOR OF HASHTABLES
 
 void hashTable_initialization(int num_of_hashTables, int num_of_buckets);
-void hashTable_push_back_lsh(vector<int>& g, int key_val);
+void hashTable_push_back(vector<int>& g, int key_val);
 void hashTable_push_back_frechet(int& g, int key_val, int grid);
 vector<int> hashTable_get_curves_in_buckets(vector<int>& g);
 int hashTable_get_num_of_htables();

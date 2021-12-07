@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+#include <cstring>
 #include <fstream>
 #include <cmath>
 #include <chrono>
@@ -8,11 +9,12 @@
 #include "vector_ops.h"
 #include "file_functions.h"
 #include "hashTable.h"
+#include "hash_functions.h"
 
 
 int main(int argc, char* argv[]){
 
-    int k ;                         //NUMBER OF H FUNCTIONS USED IN FUNCTION G
+    int k = 4;                         //NUMBER OF H FUNCTIONS USED IN FUNCTION G
     int L = 5;                      //NUMBER OF HASHTABLES(LSH)
     int N ;                         //NUMBER OF NEAREST MEIGHBORS
     float R ;                       //SEARCH RADIUS
@@ -21,6 +23,7 @@ int main(int argc, char* argv[]){
     int M_cube ;                    //MAX NUMBER OF CANDIDATE POINTS TO BE CHECKED
     int window= 100;                
     int k_cluster ;                 //NUMBER OF CENTROIDS - CLUSTERING
+    double delta = 2.5;
     bool complete= false;
 
     fstream input_file;             //FILE WE READ INPUT FROM
@@ -41,8 +44,10 @@ int main(int argc, char* argv[]){
     string name;
     int id;
     vector<double> values;
+    vector<int> hash_vector;
+    int M = pow(2, 31) - 5;
     int count = 0;
-    string algorithm;
+    string algorithm = "Frechet", metric = "discrete";
 
     unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
     default_random_engine generator(seed);
@@ -99,6 +104,27 @@ int main(int argc, char* argv[]){
     //NUMBER OF BUCKETS IN EACH HASHTABLE
     buckets = number_of_curves/curves_divider;
 
+    //INITIALIZE G FUNCTION THAT LEADS US TO LSH HASHTABLE BUCKETS
+    G_Lsh g_lsh(k, num_of_curve_values, generator, window, M, buckets, L);
+
+    if((strcmp(argv[0], "./search") == 0) && ((algorithm == "LSH") || ((algorithm == "Frechet") && (metric == "discrete")))){
+        //INITIALIZE L HASHTABLES WITH HASHTABLESIZE BUCKETS AND ZERO POINTS IN EACH BUCKET
+        hashTable_initialization(L, buckets);
+        
+        if(algorithm == "Frechet"){
+            //INITIALIZE G FRECHET FUNCTION THAT USES g_lsh
+            G_Frechet g_frechet(g_lsh, generator, L, delta, num_of_curve_values);
+
+            //INSERT ALL INPUT CURVES TO THE HASHTABLES
+            for(int i = 0; i < number_of_curves; i++){
+
+                g_lsh.hash(curve_vector_get_curve(i), hash_vector, 0, 0);
+            }
+        }
+    }
+
     
+    
+
     return 0;
 }
