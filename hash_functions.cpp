@@ -85,7 +85,7 @@ void G_Lsh::hash(const pair<pair<string, int>, vector<double>>& curve, vector<in
     vector<int> curve_hash_values;
     vector<int> curve_id_values;
 
-
+    this->id(curve, curve_id_values, false, frechet_grid);
     this->id(curve, curve_id_values, true, frechet_grid);
     for (i=0; i< curve_id_values.size() ; i++) {
         curve_hash_values.push_back(mod(curve_id_values[i], table_size));
@@ -174,15 +174,23 @@ void G_Hypercube::hash(const vector<int>& point, unsigned int& hash_value, bool 
 */
 
 //GENERATES VECTOR OF FLOATS USED IN GRID CURVE
-G_Frechet::G_Frechet(G_Lsh g_func, engine gen, int L_num, double delta_value, int num_grid_values)
+G_Frechet::G_Frechet(G_Lsh g_func, engine gen, int L_num, double delta_value, int num_grid_values, double max_value)
     :g(g_func), generator(gen), L(L_num), delta(delta_value), num_of_grid_values(num_grid_values)
 {
     t.resize(L, vector<float>(0));
+    int num_of_grid_vertices = 1;
+
+    max_coordinate_value = max(max_value, (double)num_of_grid_values);
+
+    while(num_of_grid_vertices*delta < max_value){
+
+        num_of_grid_vertices++;
+    }
 
     //FOR EVERY HASHTABLE CREATE A CORRESPONDING VECTOR t THAT DEFINES A GRID (DISTORTS GRID VALUES)
     for(int i = 0; i < L_num; i++){
-
-        create_vector_t(t[i], num_of_grid_values, delta, generator);
+        
+        create_vector_t(t[i], num_of_grid_vertices, delta, generator);
     }
     
 
@@ -193,7 +201,6 @@ G_Frechet::G_Frechet(G_Lsh g_func, engine gen, int L_num, double delta_value, in
 //CURRENT CURVE'S ID MUST BE INSERTED TO
 void G_Frechet::hash(const pair<pair<string, int>, vector<double>>& curve, vector<int>& hash_vector, bool is_query, int grid_dimensions)
 {
-
     pair<pair<string, int>, vector<double>> snapped_curve;
     vector<int> hash_values;
 
@@ -203,23 +210,32 @@ void G_Frechet::hash(const pair<pair<string, int>, vector<double>>& curve, vecto
 
     //FOR EVERY HASHTABLE
     for(int i = 1; i <= L; i++){
-
+        
         //SNAP CURVE TO CURRENT GRID
         snap_to_grid(curve, snapped_curve.second, grid_dimensions, i-1);
+
+        //CONTINUOUS FRECHET
+        if(grid_dimensions == 1){
+            
+            minima_maxima(snapped_curve.second);
+        }
+        
         padding(snapped_curve.second, grid_dimensions);
 
         //GET THE BUCKET THAT CURVE MUST BE INSERTED USING LSH HASHING
         g.hash(snapped_curve, hash_values, is_query, i);       //i CAN POSSIBLY BE A  BOOLEAN FLAG
+        
         //AND ADD IT TO CURVE'S HASH VALUES
         hash_vector.push_back(hash_values[0]);
-
         snapped_curve.second.clear();
+        
     }
     
     //INSERT CURVE'S ID TO EACH ONE OF THE L HASHTABLES INDICATED BY THE HASH_VECTOR
     hashTable_push_back(hash_vector, curve.first.second);
 
     hash_vector.clear();
+    
 }
 
 //GET A CURVE FROM INPUT AND SNAP IT TO GRID
@@ -243,19 +259,23 @@ void G_Frechet::snap_to_grid(const pair<pair<string, int>, vector<double>>& curv
         //SNAP CURVE'S CURRENT Y_VALUE TO A Y_VALUE OF THE GRID
         current_distance = abs(curve.second[i] - delta_multiple);
         previous_distance = current_distance;
-
+        
         //WHILE DISTANCE BETWEEN CURVE'S AND GRID'S CURRENT Y_VALUE KEEPS DECREASING
         //AND IS NOT ZERO
         while((current_distance <= previous_distance) && (current_distance != 0)){
+            
             count++;
-
+            
             previous_delta_multiple = delta_multiple;
-            delta_multiple += (delta+t[grid_num][count]);                      
+            
+            delta_multiple += (delta+t[grid_num][count]);                     
 
             previous_distance = current_distance;
+            
             current_distance = abs(curve.second[i] - delta_multiple);
+            
         }
-
+        
         //KEEP TRACK OF THE PREVIOUS GRID Y VALUE - NEEDED TO AVOID DUPLICATES
         grid_previous_y_value = grid_current_y_value;
         //SNAP CURVE'S CURRENT Y COORDINATE TO CLOSEST GRID Y VALUE
@@ -306,7 +326,7 @@ void G_Frechet::snap_to_grid(const pair<pair<string, int>, vector<double>>& curv
             }
         }
         else if (grid_dimensions == 1){ //1d GRID - CURVE
-
+            
             //IF AT LEAST ONE CURVE VERTICE HAS BEEN ASSIGNED TO THE PROPER GRID VERTICE
             if(snapped_curve.size() >= 1){
 
@@ -323,6 +343,7 @@ void G_Frechet::snap_to_grid(const pair<pair<string, int>, vector<double>>& curv
                 snapped_curve.push_back(grid_current_y_value);
 
             }
+            
         }
         
 
@@ -333,7 +354,8 @@ void G_Frechet::snap_to_grid(const pair<pair<string, int>, vector<double>>& curv
 //ADD WITH A LARGE VALUE UNTIL MAXIMUM SIZE IS REACHED
 void G_Frechet::padding(vector<double>& snapped_curve, int grid_dimensions){
 
-    double padding_value = 1000.0;
+    //PADDING VALUE IS GREATER THAN ALL THE CURVE VERTICES VALUES TO AVOID FALSE POSITIVES
+    double padding_value = max_coordinate_value + 1;
 
     //IF SNAPPED CURVE HAS LESS THAN LESS THAN THE MAXIMUM VALUES
     if(snapped_curve.size() < grid_dimensions * num_of_grid_values){
@@ -343,4 +365,35 @@ void G_Frechet::padding(vector<double>& snapped_curve, int grid_dimensions){
             snapped_curve.push_back(padding_value);
         }
     }
+}
+
+//KEEP ONLY THE MINIMA AND MAXIMA OF THE GRID CURVE
+void G_Frechet::minima_maxima(vector<double>& snapped_curve){
+
+    vector<double> new_curve;
+    double min_value, max_value;
+
+    new_curve.push_back(snapped_curve[0]);
+    
+    for(int i = 1; i < snapped_curve.size() - 1; i++){
+
+        min_value = min(snapped_curve[i-1], snapped_curve[i+1]);
+        max_value = max(snapped_curve[i-1], snapped_curve[i+1]);
+
+        if(snapped_curve[i] < min_value || snapped_curve[i] > max_value){
+
+            new_curve.push_back(snapped_curve[i]);
+        }
+
+    }
+
+    new_curve.push_back(snapped_curve[snapped_curve.size()-1]);
+
+    snapped_curve.clear();
+
+    for(int i = 0; i < new_curve.size(); i++){
+
+        snapped_curve.push_back(new_curve[i]);
+    }
+
 }
