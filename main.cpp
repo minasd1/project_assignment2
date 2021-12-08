@@ -118,19 +118,89 @@ int main(int argc, char* argv[]){
             //INSERT ALL INPUT CURVES TO THE HASHTABLES
             for(int i = 0; i < number_of_curves; i++){
 
-                g_frechet.hash(curve_vector_get_curve(i), hash_vector, 0, 1);
+                g_frechet.hash(curve_vector_get_curve(i), hash_vector, 0, 2);
             }
         }
 
         hash_vector.clear();
     }
 
-    // while(continue_execution == 1){
+    query_file_name = argv[2];
+    output_file_name = argv[3];
 
-    //     if(continue_execution == 1){
+    while(continue_execution == 1){
 
-    //     }
-    // }
+        if(strcmp(argv[0], "./search") == 0){
+
+            //OPEN FILE TO READ QUERY FILES FROM
+            open_file(&query_file, query_file_name, fstream::in);
+
+            //OPEN FILE TO WRITE RESULTS TO
+            open_file(&output_file, output_file_name, fstream::out);
+
+            finish = 0;
+
+            //FOR EVERY QUERY CURVE
+            while(getline(query_file, line)){                       //READ QUERY FILE LINE BY LINE
+
+                pair<pair<string, int>, vector<double>> query_curve;
+                pair<string, int> name_and_id;          
+                vector<double> query_curve_values;
+
+                start = 0;
+
+                while(start < line.size()){                         //TOKENIZE EVERY LINE IN IT'S SEPERATED STRINGS
+                    finish = line.find_first_of('\t', start);
+
+                    if(finish == string::npos){
+
+                        finish = line.size();
+                    }
+
+                    if(start < line.size() - 1){
+                        token = line.substr(start, finish - start);
+                        if(start == 0){
+
+                            name_and_id = make_pair(token, -1);         //ASSIGN NAME TO AND ID
+                        }
+                        else{
+                            query_curve_values.push_back(stod(token));    //CONVERT THE STRING TO DOUBLE AND PASS THEM TO CURVE VALUES
+                        }
+                        
+                    }
+
+                    start = finish + 1;
+                }
+
+                query_curve = make_pair(name_and_id, query_curve_values);
+
+                if(algorithm == "LSH"){
+                    g_lsh.hash(query_curve, hash_vector, 1, 0);
+
+                    //LSH NEAREST NEIGBORS
+                    //FIND TIME LSH - APPROXIMATE NEIGHBORS
+                    auto start_time = std::chrono::high_resolution_clock::now();
+                    //lsh_approximate_knn here
+                    auto stop_time = std::chrono::high_resolution_clock::now();
+                    auto time_lsh = std::chrono::duration_cast<std::chrono::microseconds>(stop_time - start_time);
+                    //FIND TIME BRUTE FORCE - EXACT NEIGHBORS
+                    auto start_time2 = std::chrono::high_resolution_clock::now();
+                    //exact_knn_here
+                    auto stop_time2 = std::chrono::high_resolution_clock::now();
+                    auto time_brute = std::chrono::duration_cast<std::chrono::microseconds>(stop_time2 - start_time2);
+                }
+                else if(algorithm == "Hypercube"){
+
+                }
+
+            }
+
+            close_file(&query_file);
+            close_file(&output_file);
+
+            continue_execution = 0;//only for now
+        }
+    }
 
     close_file(&input_file);
 
