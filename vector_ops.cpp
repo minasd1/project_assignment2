@@ -112,7 +112,6 @@ void create_vector_t(vector<float>& t, int k, int w, std::default_random_engine&
     int i;
     float rand_float;
     uniform_real_distribution<float> distribution(0.0,(float)w);
-
     t.resize(k);
     for (i=0; i < t.size() ; i++) {
         rand_float= distribution(generator);

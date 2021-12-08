@@ -14,14 +14,14 @@
 
 int main(int argc, char* argv[]){
 
-    int k = 4;                         //NUMBER OF H FUNCTIONS USED IN FUNCTION G
+    int k = 4;                      //NUMBER OF H FUNCTIONS USED IN FUNCTION G
     int L = 5;                      //NUMBER OF HASHTABLES(LSH)
     int N ;                         //NUMBER OF NEAREST MEIGHBORS
     float R ;                       //SEARCH RADIUS
     int probes ;                    //MAX NUMBER OF HYPERCUBE VERTICES TO BE CHECKED
     int k_cube ;                    //D'
     int M_cube ;                    //MAX NUMBER OF CANDIDATE POINTS TO BE CHECKED
-    int window= 100;                
+    int window= 50;                
     int k_cluster ;                 //NUMBER OF CENTROIDS - CLUSTERING
     double delta = 2.5;
     bool complete= false;
@@ -118,11 +118,21 @@ int main(int argc, char* argv[]){
             //INSERT ALL INPUT CURVES TO THE HASHTABLES
             for(int i = 0; i < number_of_curves; i++){
 
-                g_lsh.hash(curve_vector_get_curve(i), hash_vector, 0, 0);
+                g_frechet.hash(curve_vector_get_curve(i), hash_vector, 0, 1);
             }
         }
+
+        hash_vector.clear();
     }
 
+    // while(continue_execution == 1){
+
+    //     if(continue_execution == 1){
+
+    //     }
+    // }
+
+    close_file(&input_file);
 
     return 0;
 }
