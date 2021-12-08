@@ -6,6 +6,7 @@
 #include <time.h>
 #include <random>
 #include <cmath>
+#include <algorithm>
 
 using namespace std;
 
@@ -55,12 +56,14 @@ class G_Frechet{
         int L;                     //NUMBER OF GRID CURVES WHEN LSH IS USED
         double delta;              //SPACE BETWEEN GRID CURVE VALUES
         int num_of_grid_values;    //MAXIMUM NUMBER OF VALUES USED IN GIRD CURVE
+        double max_coordinate_value;          //MAXIMUM VALUE THAT IS RECORDED FOR ALL COORDINATES
     
     public:
-        G_Frechet(G_Lsh g, engine gen, int L_num, double delta_value, int num_grid_values);
+        G_Frechet(G_Lsh g, engine gen, int L_num, double delta_value, int num_grid_values, double max_value);
         void hash(const pair<pair<string, int>, vector<double>>& curve, vector<int>& hash_vector, bool is_query, int grid_dimensions);
         void snap_to_grid(const pair<pair<string, int>, vector<double>>& curve, vector<double>& snapped_curve, int grid_dimensions, int grid_num);
         void padding(vector<double>& snapped_curve, int grid_dimensions);
+        void minima_maxima(vector<double>& snapped_curve);
 
 };
 

@@ -21,7 +21,7 @@ int main(int argc, char* argv[]){
     int probes ;                    //MAX NUMBER OF HYPERCUBE VERTICES TO BE CHECKED
     int k_cube ;                    //D'
     int M_cube ;                    //MAX NUMBER OF CANDIDATE POINTS TO BE CHECKED
-    int window= 50;                
+    int window= 100;                
     int k_cluster ;                 //NUMBER OF CENTROIDS - CLUSTERING
     double delta = 2.5;
     bool complete= false;
@@ -47,7 +47,9 @@ int main(int argc, char* argv[]){
     vector<int> hash_vector;
     int M = pow(2, 31) - 5;
     int count = 0;
-    string algorithm = "Frechet", metric = "discrete";
+    double max_value = 0.0;
+    string algorithm = "Frechet"; 
+    string metric = "discrete";
 
     unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
     default_random_engine generator(seed);
@@ -78,6 +80,11 @@ int main(int argc, char* argv[]){
                     name_and_id = make_pair(token, count);  //ASSIGN NAME TO AN INCREASING ID
                 }
                 else{
+                    //KEEP TRACK OF THE MAX VALUE RECORDED IN FILE
+                    if((stod(token)) > max_value){
+
+                        max_value = stod(token);
+                    }
                     curve_values.push_back(stod(token));    //CONVERT THE STRING TO DOUBLE AND PASS THEM TO CURVE VALUES
                 }
                 
@@ -98,7 +105,7 @@ int main(int argc, char* argv[]){
 
         count++;
     }
-
+    
     curves_ID_vector_initialize(number_of_curves, L);
 
     //NUMBER OF BUCKETS IN EACH HASHTABLE
@@ -112,19 +119,21 @@ int main(int argc, char* argv[]){
         hashTable_initialization(L, buckets);
         
         if(algorithm == "Frechet"){
+            
             //INITIALIZE G FRECHET FUNCTION THAT USES g_lsh
-            G_Frechet g_frechet(g_lsh, generator, L, delta, num_of_curve_values);
-
+            G_Frechet g_frechet(g_lsh, generator, L, delta, num_of_curve_values, max_value);
+            
             //INSERT ALL INPUT CURVES TO THE HASHTABLES
             for(int i = 0; i < number_of_curves; i++){
-
-                g_frechet.hash(curve_vector_get_curve(i), hash_vector, 0, 2);
+                
+                g_frechet.hash(curve_vector_get_curve(i), hash_vector, 0, 1);
             }
         }
-
+        
         hash_vector.clear();
-    }
 
+    }
+    
     query_file_name = argv[2];
     output_file_name = argv[3];
 
