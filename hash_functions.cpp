@@ -85,7 +85,7 @@ void G_Lsh::hash(const pair<pair<string, int>, vector<double>>& curve, vector<in
     vector<int> curve_hash_values;
     vector<int> curve_id_values;
 
-
+    this->id(curve, curve_id_values, false, frechet_grid);
     this->id(curve, curve_id_values, true, frechet_grid);
     for (i=0; i< curve_id_values.size() ; i++) {
         curve_hash_values.push_back(mod(curve_id_values[i], table_size));

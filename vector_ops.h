@@ -28,11 +28,13 @@ pair<pair<string, int>, vector<double>> curve_vector_get_curve(int curve_id);
 int curve_vector_get_size();
 void curve_vector_print_values();
 
-/*--------------------POINTS ID VECTOR FUNCTIONS--------------------------*/
+/*--------------------CURVES ID VECTOR FUNCTIONS--------------------------*/
 void curves_ID_vector_initialize(int num_of_curves, int L);
 void curves_ID_vector_insert_lsh(int index_value, vector<int>& curve_id_values);
 void curves_ID_vector_insert_frechet(int index_value, int curve_id_value, int grid);
 int curves_ID_vector_get_curve_value(int index_value, int k);
+vector<int> curves_ID_vector_get_curve_all_ids(int curve_id);
+void curves_ID_vector_print();
 
 /*-------------------------V_VECTOR FUNCTIONS----------------------------*/
 void v_vectors_initialization(vector<vector<int>>& v_vectors, int num_of_v_vectors, int dimensions);

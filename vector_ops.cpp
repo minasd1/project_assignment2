@@ -70,6 +70,35 @@ int curves_ID_vector_get_curve_value(int index_value, int k){
     return id_value;
 }
 
+//RETURNS ALL THE IDS OF THE GIVEN CURVE
+//THE FIRST ID CORRESPONDS TO THE FIRST GRID'S HASH TABLE, 
+//THE SECOND ID CORRESPONDS TO THE SECOND GRID'S HASH TABLE AND SO ON 
+//INDEX VALUE IS THE KEY VALUE OF THE CURVE
+vector<int> curves_ID_vector_get_curve_all_ids(int index_value) 
+{    
+    int i;
+    vector<int> curve_ids;
+
+    for (i= 0; i < curves_ID_vector[index_value].size() ; i++) {
+        curve_ids.push_back(curves_ID_vector[index_value][i]);
+    }
+    return curve_ids;
+}
+
+void curves_ID_vector_print()
+{
+    int i, j;
+
+    cout << "ID VECTOR" << endl;
+    for (i= 0; i < curves_ID_vector.size() ; i++) {
+        cout << "i :   ";
+        for (j= 0; j < curves_ID_vector[0].size() ; j++) {
+            cout << curves_ID_vector[i][j] << " ";
+        }
+        cout << endl;
+    }
+}
+
 //SET NUMBER AND SIZE OF V-VECTORS
 void v_vectors_initialization(vector<vector<int>>& v_vectors, int num_of_v_vectors, int dimensions){
     v_vectors.resize(num_of_v_vectors, vector<int>(dimensions));
