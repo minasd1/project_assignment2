@@ -214,6 +214,24 @@ double curve_calculate_dfd(const pair<pair<string, int>, vector<double>>& curve1
 
 }
 
+//CONVERT A CURVE TO USE IT FOR CONTINUOUS FRECHET
+Curve convert_for_continuous_frechet(const pair<pair<string, int>, vector<double>>& curve, const unsigned long dimensions){
+
+    Points points(dimensions);
+
+    for(int i = 0; i < curve.second.size(); i++){
+
+        Point point(dimensions);
+        point.set(dimensions-1, curve.second[i]);
+
+        points.add(point);
+    }
+
+    Curve modified_curve(points, curve.first.first);
+
+    return modified_curve;
+}
+
 //CALCULATE DOT PRODUCT OF TWO VECTORS
 int calculate_dot_product(const pair<pair<string, int>, vector<double>>& curve, vector <int>& d_vector){
     double product = 0.0;

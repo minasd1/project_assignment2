@@ -10,6 +10,8 @@
 #include "file_functions.h"
 #include "hashTable.h"
 #include "hash_functions.h"
+#include "frechet.hpp"
+#include "curve.hpp"
 
 
 int main(int argc, char* argv[]){
@@ -114,28 +116,38 @@ int main(int argc, char* argv[]){
     //INITIALIZE G FUNCTION THAT LEADS US TO LSH HASHTABLE BUCKETS
     G_Lsh g_lsh(k, num_of_curve_values, generator, window, M, buckets, L);
 
-    if((strcmp(argv[0], "./search") == 0) && ((algorithm == "LSH") || ((algorithm == "Frechet") && (metric == "discrete")))){
-        //INITIALIZE L HASHTABLES WITH HASHTABLESIZE BUCKETS AND ZERO POINTS IN EACH BUCKET
-        hashTable_initialization(L, buckets);
-        
-        if(algorithm == "Frechet"){
-            
+    if(strcmp(argv[0], "./search") == 0){
+
+        if((algorithm == "Frechet")){
+
+            //INITIALIZE L HASHTABLES WITH HASHTABLESIZE BUCKETS AND ZERO POINTS IN EACH BUCKET
+            hashTable_initialization(L, buckets);
+
             //INITIALIZE G FRECHET FUNCTION THAT USES g_lsh
             G_Frechet g_frechet(g_lsh, generator, L, delta, num_of_curve_values, max_value);
-            
+
             //INSERT ALL INPUT CURVES TO THE HASHTABLES
             for(int i = 0; i < number_of_curves; i++){
+                if(metric == "discrete"){
+
+                    g_frechet.hash(curve_vector_get_curve(i), hash_vector, 0, 2);
+                }
+                else if(metric == "continuous"){
+
+                    g_frechet.hash(curve_vector_get_curve(i), hash_vector, 0, 1);
+                }    
                 
-                g_frechet.hash(curve_vector_get_curve(i), hash_vector, 0, 1);
             }
+            
+            
+            hash_vector.clear();
         }
-        
-        hash_vector.clear();
 
     }
-    
+
     query_file_name = argv[2];
     output_file_name = argv[3];
+    cout << "got in here" << endl;
 
     while(continue_execution == 1){
 

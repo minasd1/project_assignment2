@@ -12,6 +12,9 @@
 #include <initializer_list>
 
 #include "hash_functions.h"
+#include "frechet.hpp"
+#include "curve.hpp"
+#include "point.hpp"
 
 using namespace std;
 
@@ -49,6 +52,7 @@ void create_vector_int(vector<int>& ints, int k, int w, std::default_random_engi
 
 /*--------------------OPERATIONS BETWEEN CURVES FUNCTIONS-----------------*/
 double curve_calculate_dfd(const pair<pair<string, int>, vector<double>>& curve1, const pair<pair<string, int>, vector<double>>& curve2);
+Curve convert_for_continuous_frechet(const pair<pair<string, int>, vector<double>>& curve, const unsigned long dimensions);
 
 /*--------------------OPERATIONS BETWEEN VECTORS FUNCTIONS-----------------*/
 int calculate_dot_product(const pair<pair<string, int>, vector<double>>& curve, vector <int>& d_vector);
