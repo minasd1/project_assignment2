@@ -13,6 +13,8 @@
 #include "frechet.hpp"
 #include "curve.hpp"
 #include "lsh.h"
+#include "hypercube.h"
+#include "cube.h"
 
 
 int main(int argc, char* argv[]){
@@ -21,9 +23,9 @@ int main(int argc, char* argv[]){
     int L = 5;                      //NUMBER OF HASHTABLES(LSH)
     int N=1 ;                         //NUMBER OF NEAREST MEIGHBORS
     float R ;                       //SEARCH RADIUS
-    int probes ;                    //MAX NUMBER OF HYPERCUBE VERTICES TO BE CHECKED
-    int k_cube ;                    //D'
-    int M_cube ;                    //MAX NUMBER OF CANDIDATE POINTS TO BE CHECKED
+    int probes=2 ;                    //MAX NUMBER OF HYPERCUBE VERTICES TO BE CHECKED
+    int k_cube=3;                     //D'
+    int M_cube=1000 ;                    //MAX NUMBER OF CANDIDATE POINTS TO BE CHECKED
     int window= 50;                
     int k_cluster ;                 //NUMBER OF CENTROIDS - CLUSTERING
     double delta = 2.5;
@@ -46,12 +48,13 @@ int main(int argc, char* argv[]){
     int continue_execution = 1;
     string name;
     int id;
+    unsigned int hash_value;
     vector<double> values;
     vector<int> hash_vector;
     int M = pow(2, 31) - 5;
     int count = 0;
     double max_value = 0.0;
-    string algorithm = "LSH"; 
+    string algorithm = "Hypercube"; 
     string metric = "discrete";
 
     unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
@@ -117,6 +120,9 @@ int main(int argc, char* argv[]){
     //INITIALIZE G FUNCTION THAT LEADS US TO LSH HASHTABLE BUCKETS
     G_Lsh g_lsh(k, num_of_curve_values, generator, window, M, buckets, L);
 
+    //INITIALIZE G FUNCTION THAT LEADS US TO HYPERCUBE BUCKETS
+    G_Hypercube g_cube(num_of_curve_values, generator, window, k_cube);
+
     if(strcmp(argv[0], "./search") == 0){
 
         //INITIALIZE L HASHTABLES WITH HASHTABLESIZE BUCKETS AND ZERO POINTS IN EACH BUCKET
@@ -150,6 +156,15 @@ int main(int argc, char* argv[]){
                 g_lsh.hash(curve_vector_get_curve(i), hash_vector, 0, 0);
             }
             hash_vector.clear();
+        }
+        else if (algorithm == "Hypercube") {
+            //INITIALIZE A HYPERCUBE WITH 2^D' BUCKETS AND ZERO POINTS IN EACH BUCKET
+            hyperCube_initialization(pow(2, k_cube));
+
+            //INSERT ALL THE POINTS FROM INPUT FILE TO HYPERCUBE BUCKETS
+            for(int i = 0; i < number_of_curves; i++){
+                g_cube.hash(curve_vector_get_curve(i), hash_value, 0);
+            }
         }
 
     }
@@ -221,7 +236,8 @@ int main(int argc, char* argv[]){
                     auto stop_time2 = std::chrono::high_resolution_clock::now();
                     auto time_brute = std::chrono::duration_cast<std::chrono::microseconds>(stop_time2 - start_time2);
                     //PRINTING IN OUTPUT FILE
-                    output_file << "Query: " << query_curve.first.second << endl;
+                    output_file << "Query: " << query_curve.first.first << endl;
+                    output_file << "Algorithm: " << algorithm << endl;
                     for (int i= 1; i <= N ; i++) {
                         if (i > curves_lsh.size()) {
                             output_file << "Nearest neighbor-" << i<< ": Not enough points in buckets (Consider to decrease hash table size or window)" << endl;
@@ -231,12 +247,55 @@ int main(int argc, char* argv[]){
                         output_file << "Nearest neighbor-" << i<< ": " << curves_lsh[i-1].id << endl;
                         output_file << "distanceLSH: " << curves_lsh[i-1].dist << endl;
                         output_file << "distanceTrue: " << curves_brute[i-1].dist << endl;
+                        
                     }
                     output_file <<  "tLSH: " << time_lsh.count() << " microseconds" << endl;
                     output_file << "tTrue: " << time_brute.count() << " microseconds" << endl;
+                    output_file << endl;
                 }
                 else if(algorithm == "Hypercube"){
+                    g_cube.hash(query_curve, hash_value, 1);
+                    vector<dist_id_pair> curves_cube, curves_brute;
+                    int count_nn;
+                    output_file << "Query: " << query_curve.first.first << endl;
+                    output_file << "Algorithm: " << algorithm << endl;
+                    //--------------
+                    //CUBE NEAREST NEIGHBORS
+                    //FIND TIME CUBE - APPROXIMATE NEIGHBORS
+                    auto start_time = std::chrono::high_resolution_clock::now();
+                    curves_cube= cube_find_approximate_knn(query_curve, N, g_cube, probes, k_cube, count_nn, M_cube);
+                    auto stop_time = std::chrono::high_resolution_clock::now();
+                    auto time_cube = std::chrono::duration_cast<std::chrono::microseconds>(stop_time - start_time);
+                    //FIND TIME BRUTE FORCE - EXACT NEIGHBORS
+                    auto start_time2 = std::chrono::high_resolution_clock::now();
+                    curves_brute= find_exact_knn(query_curve, N, number_of_curves);
+                    auto stop_time2 = std::chrono::high_resolution_clock::now();
+                    auto time_brute = std::chrono::duration_cast<std::chrono::microseconds>(stop_time2 - start_time2);
+                    
+                    // //PRINTING IN OUTPUT FILE
+                    for (int i= 1; i <= N ; i++) {
+                        //IF NO POINTS FOUND
+                        if(curves_cube[i-1].id == -1){
+                            output_file << "No points found in query's bucket or it's relative buckets" << endl;
+                        }
+                        //IF AT LEAST i POINTS HAVE BEEN FOUND
+                        else if (i <= count_nn){
+                            output_file << "Nearest neighbor-" << i<< ": " << curves_cube[i-1].id << endl;
+                            output_file << "distanceCUBE: " << curves_cube[i-1].dist << endl;
+                        }
+                        //IF LESS THAN N POINTS HAVE BEEN FOUND, FOR THE REMAINING (NOT FOUND) POINTS
+                        else {
+                            output_file << "Nearest neighbor-" << i<< ": No more points found in query's bucket or (relative) buckets" << endl;
+                            output_file << "distanceCUBE: - " << endl;
+                        }
 
+                        output_file << "distanceTrue: " << curves_brute[i-1].dist << endl;
+                        
+                    }
+                    output_file <<  "tCUBE: " << time_cube.count() << " microseconds" << endl;
+                    output_file << "tTrue: " << time_brute.count() << " microseconds" << endl;
+                    output_file << endl;
+                    //-----------------
                 }
 
                 hash_vector.clear();

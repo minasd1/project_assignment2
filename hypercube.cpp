@@ -6,7 +6,7 @@ void hyperCube_initialization(int num_of_buckets){
     HyperCube.resize(num_of_buckets, vector<int>(0));
 }
 
-//PUT A POINT'S ID VALUE TO A BUCKET OF HYPERCUBE
+//PUT A CURVE'S ID VALUE TO A BUCKET OF HYPERCUBE
 //BUCKET IS INDICATED BY THE INT VALUE PRODUCED BY FUNCTION G
 void hyperCube_push_back(unsigned int g, int key_val){
     HyperCube[g].push_back(key_val);
@@ -17,18 +17,18 @@ int hyperCube_get_size(){
     return HyperCube.size();
 }
 
-//GET KEY VALUES OF ALL THE POINTS OF A BUCKET OF HYPERCUBE
+//GET KEY VALUES OF ALL THE CURVES OF A BUCKET OF HYPERCUBE
 //BUCKET IS INDICATED BY THE INT VALUE PRODUCED BY FUNCTION G
-vector<int> hyperCube_get_points_in_bucket(unsigned int g){
+vector<int> hyperCube_get_curves_in_bucket(unsigned int g){
 
-    vector<int> points_in_bucket;
+    vector<int> curves_in_bucket;
 
     for(int i = 0; i < HyperCube[g].size(); i++){
-        //PUSH THE ID OF THE POINT TO POINTS IN HYPERCUBE BUCKET
-        points_in_bucket.push_back(HyperCube[g][i]);
+        //PUSH THE ID OF THE CURVE TO CURVES IN HYPERCUBE BUCKET
+        curves_in_bucket.push_back(HyperCube[g][i]);
     }
 
-    return points_in_bucket;
+    return curves_in_bucket;
 }
 
 
@@ -39,8 +39,8 @@ int hyperCube_get_bucket_size(int bucket){
     return HyperCube[bucket].size();
 }
 
-//GET A SPECIFIC POINT FROM A HYPERCUBE BUCKET
-int hyperCube_get_point(int bucket, int place){
+//GET A SPECIFIC CURVE FROM A HYPERCUBE BUCKET
+int hyperCube_get_curve(int bucket, int place){
 
     return HyperCube[bucket][place];
 }

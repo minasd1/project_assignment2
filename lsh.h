@@ -13,8 +13,8 @@
 
 using namespace std;
 
-vector<dist_id_pair> lsh_find_approximate_knn(pair<pair<string, int>, vector<double>> query_point, int k,  G_Lsh& g, int frechet_grid, int max_candidates=-1);
-vector<dist_id_pair> find_exact_knn(pair<pair<string, int>, vector<double>> query_point, int k, int num_of_points);
+vector<dist_id_pair> lsh_find_approximate_knn(pair<pair<string, int>, vector<double>>& query_curve, int k,  G_Lsh& g, int frechet_grid, int max_candidates=-1);
+vector<dist_id_pair> find_exact_knn(pair<pair<string, int>, vector<double>>& query_curve, int k, int num_of_points);
 //vector<int> lsh_range_search(vector<int>& g, int radius, vector<int>& query_point);
 
 

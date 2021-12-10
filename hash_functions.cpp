@@ -1,10 +1,12 @@
 #include <iostream>
 #include <random>
 #include <cmath>
+#include <utility>
 #include "hash_functions.h"
 #include "vector_ops.h"
 #include "mod.h"
 #include "hashTable.h"
+#include "hypercube.h"
 
 //CONSTRUCTOR OF ALL THE G FUNCTIONS
 //GENERATES THE RANDOM V_VECTOR AND t FLOATS USED IN H FUNCTION
@@ -117,7 +119,7 @@ void G_Lsh::print_hash_functions_data(void)
     }
 }
 
-/*
+
 //CONSTRUCTOR OF THE HYPERCUBE'S HASH FUNCTION
 //GENERATES d' RANDOM h HASH FUNCTIONS
 //GENERATES d' RANDOM f FUNCTIONS
@@ -155,22 +157,22 @@ int f(int& h, int& random_int_2)
 //RECEIVES AND MODIFIES ARGUMENT hash_value SO THAT IT SHOWS IN WHICH VERTEX
 //OF THE HYPERCUBE THE GIVEN POINT CORRESPONDS TO
 //IF is_query IS false THE RECEIVED POINT point IS STORED IN THE HYPERCUBE'S HASH TABLE
-void G_Hypercube::hash(const vector<int>& point, unsigned int& hash_value, bool is_query)
+void G_Hypercube::hash(const pair<pair<string, int>, vector<double>>& curve, unsigned int& hash_value, bool is_query)
 {
     int i, h, result;
 
     hash_value= 0; // 0000...000
     for (i=0; i < string_dimensions ; i++){
-        h= (calculate_dot_product(point, v_vectors[i]) + t[i])/w;
+        h= (calculate_dot_product(curve, v_vectors[i]) + t[i])/w;
         result= f(h, rand_ints[i]); //0 or 1
         hash_value <<= 1;
         hash_value+= result; // Last bit gets the value of result
     }
     if (!is_query) {
-        hyperCube_push_back(hash_value, point[0]);
+        hyperCube_push_back(hash_value, curve.first.second);
     }
 }
-*/
+
 
 //GENERATES VECTOR OF FLOATS USED IN GRID CURVE
 G_Frechet::G_Frechet(G_Lsh g_func, engine gen, int L_num, double delta_value, int num_grid_values, double max_value)

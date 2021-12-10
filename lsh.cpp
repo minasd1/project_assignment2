@@ -24,23 +24,23 @@ bool is_there_someone_with_same_id(vector<int>& query_curve_ids, vector<int>& ca
     return is_there_at_least_one;
 }
 
-//RECEIVES A QUERY POINT AND RETURNS THE FIRST k NEAREST NEIGHBORS IN ASCENDING DISTANCE ORDER
-//THE LAST ARGUMENT IS OPTIONAL AND SHOWS THE MAXIMUM NUMBER OF POINTS TO BE EXAMINED AS POSSIBLE NEAREST NEIGHBORS
-//IF NO FORTH ARGUMENT IS GIVEN THEN ALL THE POINTS IN THE SAME BUCKETS WITH query_point ARE EXAMINED
-vector<dist_id_pair> lsh_find_approximate_knn(pair<pair<string, int>, vector<double>> query_curve, int k, G_Lsh& g, int frechet_grid, int max_candidates)// THIRD ARG IS THE OBJECT OF CLASS G DECLEARED IN MAIN FUNCTION
+//RECEIVES A QUERY CURVE AND RETURNS THE FIRST k NEAREST NEIGHBORS IN ASCENDING DISTANCE ORDER
+//THE LAST ARGUMENT IS OPTIONAL AND SHOWS THE MAXIMUM NUMBER OF CURVES TO BE EXAMINED AS POSSIBLE NEAREST NEIGHBORS
+//IF NO FORTH ARGUMENT IS GIVEN THEN ALL THE CURVES IN THE SAME BUCKETS WITH query_curve ARE EXAMINED
+vector<dist_id_pair> lsh_find_approximate_knn(pair<pair<string, int>, vector<double>>& query_curve, int k, G_Lsh& g, int frechet_grid, int max_candidates)// THIRD ARG IS THE OBJECT OF CLASS G DECLEARED IN MAIN FUNCTION
 {
     int curves_in_table_counter= 0; //A COUNTER OF THE ELEMENTS INSIDE THE nn_table
     vector<dist_id_pair> nn_table; //A TABLE IN WHICH THE PAIRS OF {DISTANCE, ID} OF THE NEAREST NEIGHBORING CURVES ARE STORED IN ASCENDIND DISTANCE ORDER
-    vector<int> candidate_curves; //A TABLE OF ALL THE {HASHTABLE_INDEX, POINT_ID} PAIRS, WHERE POINT_ID BELONGS TO A CURVE THAT BELONG TO THE SAME BUCKET WITH THE query_curve IN ANY OF THE L HASHTABLES
+    vector<int> candidate_curves; //A TABLE OF ALL THE {HASHTABLE_INDEX, CURVE_ID} PAIRS, WHERE CURVE_ID BELONGS TO A CURVE THAT BELONG TO THE SAME BUCKET WITH THE query_curve IN ANY OF THE L HASHTABLES
                                   //PERHAPS ONE CURVE EXISTS MORE THAN ONCE IN THE candidate_curves TABLE BECAUSE IT APPEARS IN MORE THAN ONE HASHTABLES
     vector<int> curves_with_same_id; //A TABLE OF PAIRS WHERE THE CANDIDATES WITH THE SAME ID WITH QUERY_CURVE'S ID ARE STORED
     vector<int> buckets_indexes; //THE L BUCKETS' INDEXES WHERE THE QUERY CURVE WOULD BELONG IF IT WAS HASHED BY THE L G_HASH_FUNCTIONS
     vector<int> query_curves_ids;//A TABLE OF L QUERY_CURVE'S IDs, ONE FOR EACH HASH TABLE
     double max_distance; //THE DISTANCE BETWEEN THE QUERY CURVE AND IT'S k-th NEAREST NEIGHBORS
     double distance;
-    int candidates_counter; //A COUNTER OF THE POINTS THAT HAVE BEEN COMPARED
+    int candidates_counter; //A COUNTER OF THE CURVES THAT HAVE BEEN COMPARED
     pair<pair<string, int>, vector<double>> current_candidate;
-    vector<int> current_candidate_ids; //THE IDs OF A CANDIDATE POINT
+    vector<int> current_candidate_ids; //THE IDs OF A CANDIDATE CURVE
     dist_id_pair current_pair;
     int i;
     bool at_least_one_candidate_has_same_id;
@@ -50,21 +50,21 @@ vector<dist_id_pair> lsh_find_approximate_knn(pair<pair<string, int>, vector<dou
     g.hash(query_curve, buckets_indexes, true, frechet_grid);
     //FIND QUERY CURVE'S ID FOR EACH HASH TABLE
     g.id(query_curve, query_curves_ids, true, frechet_grid);
-    //GET ALL THE CANDIDATE POINTS IDS AND THE HASHTABLE WHERE EACH OF THE WAS FOUND
+    //GET ALL THE CANDIDATE CURVES IDS AND THE HASHTABLE WHERE EACH OF THE WAS FOUND
     candidate_curves= hashTable_get_curves_in_buckets(buckets_indexes);
-    //SEARCH IF THERE IS AT LEAST ONE POINT IN CANDIDATES SET WITH SAME ID WITH THE QUERY POINT
+    //SEARCH IF THERE IS AT LEAST ONE CURVE IN CANDIDATES SET WITH SAME ID WITH THE QUERY CURVE
     at_least_one_candidate_has_same_id= is_there_someone_with_same_id(query_curves_ids,
     candidate_curves, same_id_counter, curves_with_same_id);
-    //IF THE BOOLEAN ABOVE IS TRUE ALL THE CANDIDATE POINTS WITH DIFFRENT ID THAN THE QUERY WILL BE SKIPED
+    //IF THE BOOLEAN ABOVE IS TRUE ALL THE CANDIDATE CURVES WITH DIFFRENT ID THAN THE QUERY WILL BE SKIPED
     //IF ITS FALSE THEN ALL THE CANDIDATES WILL BE EXAMINED AS POSSIBLE NEAREST NEIGHBORS
 
     candidates_counter= 0;
-    //FIRST CHECK THE CANDIDATE_POINTS WITH THE SAME ID WITH QUERY POINT
+    //FIRST CHECK THE CANDIDATE_CURVES WITH THE SAME ID WITH QUERY CURVE
     for (i= 0; i < curves_with_same_id.size() ; i+=2) {
-        if (candidates_counter == max_candidates) { //DONT COMPARE MORE THAN max_candidates POINTS
+        if (candidates_counter == max_candidates) { //DONT COMPARE MORE THAN max_candidates CURVES
             break;
         }
-        //GET THE CURRENT CANDIDATE POINT'S COORDINATES AND IT's DISTANCE FROM QUERY POINT
+        //GET THE CURRENT CANDIDATE CURVE'S COORDINATES AND IT's DISTANCE FROM QUERY CURVE
         current_candidate= curve_vector_get_curve(curves_with_same_id[i+1]); //+1 BECAUSE candidate_curves IS [HASHTABLE, CURVE_INDEX, HASHTABLE, ...]
         distance= calculate_distance(query_curve.second, current_candidate.second);
         //CREATE A PAIR WITH THESE TWO VALUES
@@ -79,7 +79,7 @@ vector<dist_id_pair> lsh_find_approximate_knn(pair<pair<string, int>, vector<dou
         }
         else if (curves_in_table_counter == k) { //WHEN THE nn_table HAS BEEN FILLED FULLY FOR THE FIRST TIME
             sort(nn_table.begin(), nn_table.end(), compare_distance); //SORT THE FIRST k PAIRS IN ASCENDING DISTANCE ORDER
-            max_distance= nn_table[k-1].dist; //THE LAST ELEMENT OF THE nn_table HAS THE MAXIMUM DISTANCE FROM QUERY POINT
+            max_distance= nn_table[k-1].dist; //THE LAST ELEMENT OF THE nn_table HAS THE MAXIMUM DISTANCE FROM QUERY CURVE
             if (current_pair.dist < max_distance && !already_exist(nn_table, current_pair.id)) {
                 insert_at_correct_place(nn_table, current_pair);
                 max_distance= nn_table[k-1].dist;
@@ -105,7 +105,7 @@ vector<dist_id_pair> lsh_find_approximate_knn(pair<pair<string, int>, vector<dou
                 break;
             }
             //GET THE CURRENT CANDIDATE CURVE'S COORDINATES AND IT'S DISTANCE FROM QUERY CURVE
-            current_candidate= curve_vector_get_curve(candidate_curves[i+1]);//+1 BECAUSE candidate_points IS [HASHTABLE, POINT_INDEX, HASHTABLE, ...]
+            current_candidate= curve_vector_get_curve(candidate_curves[i+1]);//+1 BECAUSE candidate_curves IS [HASHTABLE, CURVE_INDEX, HASHTABLE, ...]
             distance= calculate_distance(query_curve.second, current_candidate.second);
             //CREATE A PAIR WITH THESE TWO VALUES
             current_pair.dist= distance;
@@ -119,7 +119,7 @@ vector<dist_id_pair> lsh_find_approximate_knn(pair<pair<string, int>, vector<dou
             }
             else if (curves_in_table_counter == k) { //WHEN THE nn_table HAS BEEN FILLED FULLY FOR THE FIRST TIME
                 sort(nn_table.begin(), nn_table.end(), compare_distance); //SORT THE FIRST k PAIRS IN ASCENDING DISTANCE ORDER
-                max_distance= nn_table[k-1].dist; //THE LAST ELEMENT OF THE nn_table HAS THE MAXIMUM DISTANCE FROM QUERY POINT
+                max_distance= nn_table[k-1].dist; //THE LAST ELEMENT OF THE nn_table HAS THE MAXIMUM DISTANCE FROM QUERY CURVE
                 if (current_pair.dist < max_distance && !already_exist(nn_table, current_pair.id) ) {
                     insert_at_correct_place(nn_table, current_pair);
                     max_distance= nn_table[k-1].dist;
@@ -135,7 +135,7 @@ vector<dist_id_pair> lsh_find_approximate_knn(pair<pair<string, int>, vector<dou
                 candidates_counter++;
             }
         }
-        if (nn_table.size() < k) { //JUST IN CASE THERE ARE LESS THAN k CANDIDATE POINTS IN THE BUCKETS
+        if (nn_table.size() < k) { //JUST IN CASE THERE ARE LESS THAN k CANDIDATE CURVES IN THE BUCKETS
             sort(nn_table.begin(), nn_table.end(), compare_distance);
         }
     }
@@ -144,10 +144,10 @@ vector<dist_id_pair> lsh_find_approximate_knn(pair<pair<string, int>, vector<dou
 
 //RECEIVES A QUERY CURVE AND RETURNS THE FIRST k EXACT NEAREST NEIGHBORS
 //IN ASCENDING DISTANCE ORDER USING BRUTE FORCE
-vector<dist_id_pair> find_exact_knn(pair<pair<string, int>, vector<double>> query_curve, int k, int num_of_curves)
+vector<dist_id_pair> find_exact_knn(pair<pair<string, int>, vector<double>>& query_curve, int k, int num_of_curves)
 {
     int i;
-    vector<dist_id_pair> nn_table; //A TABLE IN WHICH THE PAIRS OF {DISTANCE, ID} OF THE NEAREST //NEIGHBORING POINTS ARE STORED IN ASCENDIND DISTANCE ORDER
+    vector<dist_id_pair> nn_table; //A TABLE IN WHICH THE PAIRS OF {DISTANCE, ID} OF THE NEAREST //NEIGHBORING CURVES ARE STORED IN ASCENDIND DISTANCE ORDER
     pair<pair<string, int>, vector<double>> current_candidate;
     dist_id_pair current_pair;
     int curves_in_table_counter= 0;
@@ -169,7 +169,7 @@ vector<dist_id_pair> find_exact_knn(pair<pair<string, int>, vector<double>> quer
         }
         else if (curves_in_table_counter == k) { //WHEN THE nn_table HAS BEEN FILLED FULLY FOR THE FIRST TIME
             sort(nn_table.begin(), nn_table.end(), compare_distance); //SORT THE FIRST k PAIRS IN ASCENDING DISTANCE ORDER
-            max_distance= nn_table[k-1].dist; //THE LAST ELEMENT OF THE nn_table HAS THE MAXIMUM DISTANCE FROM QUERY POINT
+            max_distance= nn_table[k-1].dist; //THE LAST ELEMENT OF THE nn_table HAS THE MAXIMUM DISTANCE FROM QUERY CURVE
             if (current_pair.dist < max_distance) {
                 insert_at_correct_place(nn_table, current_pair);
                 max_distance= nn_table[k-1].dist;
@@ -182,12 +182,13 @@ vector<dist_id_pair> find_exact_knn(pair<pair<string, int>, vector<double>> quer
             }
         }
     }
-    if (nn_table.size() < k) { //JUST IN CASE THERE ARE LESS THAN k CANDIDATE POINTS IN THE BUCKETS
+    if (nn_table.size() < k) { //JUST IN CASE THERE ARE LESS THAN k CANDIDATE CURVES IN THE BUCKETS
         sort(nn_table.begin(), nn_table.end(), compare_distance);
     }
 
     return nn_table;
 }
+
 
 /*
 //IMPLEMENT APPROXIMATE RANGE SEARCH ALGORITHM

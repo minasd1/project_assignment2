@@ -7,6 +7,7 @@
 #include <random>
 #include <cmath>
 #include <algorithm>
+#include <utility>
 
 using namespace std;
 
@@ -45,7 +46,7 @@ private:
     vector<int> rand_ints; // A TABLE OF d' RANDOM INTEGER VALUES, ONE FOR EACH f FUNCTION
 public:
     G_Hypercube(int dim, engine gen, int win, int str_dim);
-    void hash(const vector<int>& point, unsigned int& hash_value, bool is_query);
+    void hash(const pair<pair<string, int>, vector<double>>& curve, unsigned int& hash_value, bool is_query);
 };
 
 class G_Frechet{
