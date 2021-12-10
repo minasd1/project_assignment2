@@ -10,20 +10,20 @@
 #include "file_functions.h"
 #include "hashTable.h"
 #include "hash_functions.h"
-#include "frechet.hpp"
-#include "curve.hpp"
+#include "lsh.h"
+
 
 
 int main(int argc, char* argv[]){
 
     int k = 4;                      //NUMBER OF H FUNCTIONS USED IN FUNCTION G
-    int L = 5;                      //NUMBER OF HASHTABLES(LSH)
-    int N ;                         //NUMBER OF NEAREST MEIGHBORS
+    int L = 3;                      //NUMBER OF HASHTABLES(LSH)
+    int N=1 ;                         //NUMBER OF NEAREST MEIGHBORS
     float R ;                       //SEARCH RADIUS
     int probes ;                    //MAX NUMBER OF HYPERCUBE VERTICES TO BE CHECKED
     int k_cube ;                    //D'
     int M_cube ;                    //MAX NUMBER OF CANDIDATE POINTS TO BE CHECKED
-    int window= 100;                
+    int window= 50;                
     int k_cluster ;                 //NUMBER OF CENTROIDS - CLUSTERING
     double delta = 2.5;
     bool complete= false;
@@ -49,9 +49,7 @@ int main(int argc, char* argv[]){
     vector<int> hash_vector;
     int M = pow(2, 31) - 5;
     int count = 0;
-    double max_value = 0.0;
-    string algorithm = "Frechet"; 
-    string metric = "discrete";
+    string algorithm = "LSH", metric = "discrete";
 
     unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
     default_random_engine generator(seed);
@@ -82,11 +80,6 @@ int main(int argc, char* argv[]){
                     name_and_id = make_pair(token, count);  //ASSIGN NAME TO AN INCREASING ID
                 }
                 else{
-                    //KEEP TRACK OF THE MAX VALUE RECORDED IN FILE
-                    if((stod(token)) > max_value){
-
-                        max_value = stod(token);
-                    }
                     curve_values.push_back(stod(token));    //CONVERT THE STRING TO DOUBLE AND PASS THEM TO CURVE VALUES
                 }
                 
@@ -107,7 +100,7 @@ int main(int argc, char* argv[]){
 
         count++;
     }
-    
+
     curves_ID_vector_initialize(number_of_curves, L);
 
     //NUMBER OF BUCKETS IN EACH HASHTABLE
@@ -116,38 +109,33 @@ int main(int argc, char* argv[]){
     //INITIALIZE G FUNCTION THAT LEADS US TO LSH HASHTABLE BUCKETS
     G_Lsh g_lsh(k, num_of_curve_values, generator, window, M, buckets, L);
 
-    if(strcmp(argv[0], "./search") == 0){
-
-        if((algorithm == "Frechet")){
-
-            //INITIALIZE L HASHTABLES WITH HASHTABLESIZE BUCKETS AND ZERO POINTS IN EACH BUCKET
-            hashTable_initialization(L, buckets);
-
+    if((strcmp(argv[0], "./search") == 0) && ((algorithm == "LSH") || ((algorithm == "Frechet") && (metric == "discrete")))){
+        //INITIALIZE L HASHTABLES WITH HASHTABLESIZE BUCKETS AND ZERO POINTS IN EACH BUCKET
+        hashTable_initialization(L, buckets);
+        
+        if(algorithm == "Frechet"){
             //INITIALIZE G FRECHET FUNCTION THAT USES g_lsh
-            G_Frechet g_frechet(g_lsh, generator, L, delta, num_of_curve_values, max_value);
+            G_Frechet g_frechet(g_lsh, generator, L, delta, num_of_curve_values);
 
             //INSERT ALL INPUT CURVES TO THE HASHTABLES
             for(int i = 0; i < number_of_curves; i++){
-                if(metric == "discrete"){
 
-                    g_frechet.hash(curve_vector_get_curve(i), hash_vector, 0, 2);
-                }
-                else if(metric == "continuous"){
-
-                    g_frechet.hash(curve_vector_get_curve(i), hash_vector, 0, 1);
-                }    
-                
+                g_frechet.hash(curve_vector_get_curve(i), hash_vector, 0, 2);
             }
-            
-            
-            hash_vector.clear();
+        }
+        else if (algorithm == "LSH") {
+            //INSERT ALL INPUT CURVES TO THE HASHTABLES
+            for(int i = 0; i < number_of_curves; i++){
+
+                g_lsh.hash(curve_vector_get_curve(i), hash_vector, 0, 0);
+            }
         }
 
+        hash_vector.clear();
     }
 
     query_file_name = argv[2];
     output_file_name = argv[3];
-    cout << "got in here" << endl;
 
     while(continue_execution == 1){
 
@@ -192,12 +180,43 @@ int main(int argc, char* argv[]){
 
                     start = finish + 1;
                 }
-
+                cout << "22222222222222" << endl;
                 query_curve = make_pair(name_and_id, query_curve_values);
-
+                cout << "33333333333333" << endl;
                 if(algorithm == "LSH"){
+                    cout << "EINAI LSH" << endl;
                     g_lsh.hash(query_curve, hash_vector, 1, 0);
+                    cout << "44444444444444" << endl;
+                    vector<dist_id_pair> curves_lsh, curves_brute;
 
+                    //LSH NEAREST NEIGHBORS
+                    //FIND TIME LSH - APPROXIMATE NEIGHBORS
+                    cout << "111111111111111" << endl;
+                    auto start_time = std::chrono::high_resolution_clock::now();
+                    curves_lsh= lsh_find_approximate_knn(query_curve, N, g_lsh, 0);
+                    auto stop_time = std::chrono::high_resolution_clock::now();
+                    auto time_lsh = std::chrono::duration_cast<std::chrono::microseconds>(stop_time - start_time);
+                    //FIND TIME BRUTE FORCE - EXACT NEIGHBORS
+                    auto start_time2 = std::chrono::high_resolution_clock::now();
+                    curves_brute= find_exact_knn(query_curve, N, number_of_curves);
+                    auto stop_time2 = std::chrono::high_resolution_clock::now();
+                    auto time_brute = std::chrono::duration_cast<std::chrono::microseconds>(stop_time2 - start_time2);
+                    //PRINTING IN OUTPUT FILE
+                    output_file << "Query: " << query_curve.first.second << endl;
+                    for (int i= 1; i <= N ; i++) {
+                        if (i > curves_lsh.size()) {
+                            output_file << "Nearest neighbor-" << i<< ": Not enough points in buckets (Consider to decrease hash table size or window)" << endl;
+                            output_file << "distanceLSH: Not enough points in buckets (Consider to decrease hash table size or window)" << endl;
+                            continue;
+                        }
+                        output_file << "Nearest neighbor-" << i<< ": " << curves_lsh[i-1].id << endl;
+                        output_file << "distanceLSH: " << curves_lsh[i-1].dist << endl;
+                        output_file << "distanceTrue: " << curves_brute[i-1].dist << endl;
+                    }
+                    output_file <<  "tLSH: " << time_lsh.count() << " microseconds" << endl;
+                    output_file << "tTrue: " << time_brute.count() << " microseconds" << endl;
+
+/*
                     //LSH NEAREST NEIGBORS
                     //FIND TIME LSH - APPROXIMATE NEIGHBORS
                     auto start_time = std::chrono::high_resolution_clock::now();
@@ -208,7 +227,7 @@ int main(int argc, char* argv[]){
                     auto start_time2 = std::chrono::high_resolution_clock::now();
                     //exact_knn_here
                     auto stop_time2 = std::chrono::high_resolution_clock::now();
-                    auto time_brute = std::chrono::duration_cast<std::chrono::microseconds>(stop_time2 - start_time2);
+                    auto time_brute = std::chrono::duration_cast<std::chrono::microseconds>(stop_time2 - start_time2);  */
                 }
                 else if(algorithm == "Hypercube"){
 
