@@ -200,7 +200,7 @@ G_Frechet::G_Frechet(G_Lsh g_func, engine gen, int L_num, double delta_value, in
 //PRODUCES A 1d VECTOR WITH DOUBLE VALUES THAT IS THE KEY FOR HASHTABLE INSERTION
 //LSH HASH GETS THAT KEY AND RETURNS THE PROPER HASHTABLE BUCKETS THAT
 //CURRENT CURVE'S ID MUST BE INSERTED TO
-void G_Frechet::hash(const pair<pair<string, int>, vector<double>>& curve, vector<int>& hash_vector, bool is_query, int grid_dimensions)
+void G_Frechet::hash(const pair<pair<string, int>, vector<double>>& curve, vector<int>& hash_vector, vector<int>& id_vector, bool is_query, int grid_dimensions)
 {
     pair<pair<string, int>, vector<double>> snapped_curve;
     vector<int> hash_values;
@@ -225,6 +225,12 @@ void G_Frechet::hash(const pair<pair<string, int>, vector<double>>& curve, vecto
 
         //GET THE BUCKET THAT CURVE MUST BE INSERTED USING LSH HASHING
         g.hash(snapped_curve, hash_values, is_query, i);       //i CAN POSSIBLY BE A  BOOLEAN FLAG
+
+        //IF IT'S A QUERY CURVE, GET IT'S IDS
+        if(is_query == true){
+            
+            g.id(snapped_curve, id_vector, 1, 1);
+        }
         
         //AND ADD IT TO CURVE'S HASH VALUES
         hash_vector.push_back(hash_values[0]);
@@ -232,9 +238,12 @@ void G_Frechet::hash(const pair<pair<string, int>, vector<double>>& curve, vecto
         
     }
     
-    //INSERT CURVE'S ID TO EACH ONE OF THE L HASHTABLES INDICATED BY THE HASH_VECTOR
-    hashTable_push_back(hash_vector, curve.first.second);
+    if(!is_query){
+        //INSERT CURVE'S ID TO EACH ONE OF THE L HASHTABLES INDICATED BY THE HASH_VECTOR
+        hashTable_push_back(hash_vector, curve.first.second);
 
+    }
+    
     hash_vector.clear();
     
 }

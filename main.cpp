@@ -15,6 +15,7 @@
 #include "lsh.h"
 #include "hypercube.h"
 #include "cube.h"
+#include "frechet_functions.h"
 
 
 int main(int argc, char* argv[]){
@@ -51,10 +52,11 @@ int main(int argc, char* argv[]){
     unsigned int hash_value;
     vector<double> values;
     vector<int> hash_vector;
+    vector<int> id_vector;
     int M = pow(2, 31) - 5;
     int count = 0;
     double max_value = 0.0;
-    string algorithm = "Hypercube"; 
+    string algorithm = "Frechet"; 
     string metric = "discrete";
 
     unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
@@ -123,6 +125,9 @@ int main(int argc, char* argv[]){
     //INITIALIZE G FUNCTION THAT LEADS US TO HYPERCUBE BUCKETS
     G_Hypercube g_cube(num_of_curve_values, generator, window, k_cube);
 
+    //INITIALIZE G FRECHET FUNCTION THAT USES g_lsh
+    G_Frechet g_frechet(g_lsh, generator, L, delta, num_of_curve_values, max_value);
+
     if(strcmp(argv[0], "./search") == 0){
 
         //INITIALIZE L HASHTABLES WITH HASHTABLESIZE BUCKETS AND ZERO POINTS IN EACH BUCKET
@@ -130,18 +135,15 @@ int main(int argc, char* argv[]){
 
         if((algorithm == "Frechet")){
 
-            //INITIALIZE G FRECHET FUNCTION THAT USES g_lsh
-            G_Frechet g_frechet(g_lsh, generator, L, delta, num_of_curve_values, max_value);
-
             //INSERT ALL INPUT CURVES TO THE HASHTABLES
             for(int i = 0; i < number_of_curves; i++){
                 if(metric == "discrete"){
 
-                    g_frechet.hash(curve_vector_get_curve(i), hash_vector, 0, 2);
+                    g_frechet.hash(curve_vector_get_curve(i), hash_vector, id_vector, false, 2);
                 }
                 else if(metric == "continuous"){
 
-                    g_frechet.hash(curve_vector_get_curve(i), hash_vector, 0, 1);
+                    g_frechet.hash(curve_vector_get_curve(i), hash_vector, id_vector,  false, 1);
                 }    
                 
             }
@@ -297,6 +299,46 @@ int main(int argc, char* argv[]){
                     output_file << endl;
                     //-----------------
                 }
+                else if(algorithm == "Frechet"){
+                    if(metric == "discrete"){
+                        
+                        //auto tApproximateAverage = 0;
+                        vector<dist_id_pair> curves_discrete_frechet, curves_brute;
+
+                        //DISCRETE FRECHET NEAREST NEIGHBORS
+                        //FIND TIME DISCRETE FRECHET - APPROXIMATE NEIGHBORS
+
+                        auto start_time = std::chrono::high_resolution_clock::now();
+                        curves_discrete_frechet= frechet_find_approximate_knn_discrete(query_curve, N, g_frechet);
+                        auto stop_time = std::chrono::high_resolution_clock::now();
+                        auto time_discrete_frechet = std::chrono::duration_cast<std::chrono::microseconds>(stop_time - start_time);
+                        //tApproximateAverage = (tApproximateAverage + time_discrete_frechet);
+
+                        //FIND TIME BRUTE FORCE - EXACT NEIGHBORS
+                        auto start_time2 = std::chrono::high_resolution_clock::now();
+                        curves_brute= frechet_find_exact_knn_discrete(query_curve, N, number_of_curves);
+                        auto stop_time2 = std::chrono::high_resolution_clock::now();
+                        auto time_brute = std::chrono::duration_cast<std::chrono::microseconds>(stop_time2 - start_time2);
+                        //PRINTING IN OUTPUT FILE
+                        output_file << "Query: " << query_curve.first.second << endl;
+                        output_file << "Algorithm: LSH_Frechet_Discrete" << endl;
+                        for (int i= 1; i <= N ; i++) {
+                            if (i > curves_discrete_frechet.size()) {
+                                output_file << "Nearest neighbor-" << i<< ": Not enough points in buckets (Consider to decrease hash table size or window)" << endl;
+                                output_file << "distanceApproximate: Not enough points in buckets (Consider to decrease hash table size or window)" << endl;
+                                continue;
+                            }
+                            output_file << "Approximate Nearest neighbor-" << i<< ": " << curves_discrete_frechet[i-1].id << endl;
+                            output_file << "True Nearest neighbor: " << curves_brute[i-1].id << endl;
+                            output_file << "distanceApproximate: " << curves_discrete_frechet[i-1].dist << endl;
+                            output_file << "distanceTrue: " << curves_brute[i-1].dist << endl;
+                        }
+                        output_file <<  "tApproximate: " << time_discrete_frechet.count() << " microseconds" << endl;
+                        output_file << "tTrue: " << time_brute.count() << " microseconds" << endl;
+                        output_file << endl;
+                    }
+                }
+
 
                 hash_vector.clear();
 
