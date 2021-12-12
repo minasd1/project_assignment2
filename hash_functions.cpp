@@ -175,15 +175,15 @@ void G_Hypercube::hash(const pair<pair<string, int>, vector<double>>& curve, uns
 
 
 //GENERATES VECTOR OF FLOATS USED IN GRID CURVE
-G_Frechet::G_Frechet(G_Lsh g_func, engine gen, int L_num, double delta_value, int num_grid_values, double max_value)
-    :g(g_func), generator(gen), L(L_num), delta(delta_value), num_of_grid_values(num_grid_values)
+G_Frechet::G_Frechet(G_Lsh g_func, engine gen, int L_num, double delta_value, double max_value)
+    :g(g_func), generator(gen), L(L_num), delta(delta_value)
 {
     t.resize(L, vector<float>(0));
-    int num_of_grid_vertices = 1;
-
+    int num_of_grid_vertices = 0;//1
+    
     max_coordinate_value = max(max_value, (double)num_of_grid_values);
 
-    while(num_of_grid_vertices*delta < max_value){
+    while(num_of_grid_vertices*delta < max_coordinate_value){
 
         num_of_grid_vertices++;
     }

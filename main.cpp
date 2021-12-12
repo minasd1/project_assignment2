@@ -4,6 +4,7 @@
 #include <fstream>
 #include <cmath>
 #include <chrono>
+#include <algorithm>
 #include <random>
 
 #include "vector_ops.h"
@@ -16,6 +17,7 @@
 #include "hypercube.h"
 #include "cube.h"
 #include "frechet_functions.h"
+#include "read_file_data.h"
 
 
 int main(int argc, char* argv[]){
@@ -45,6 +47,7 @@ int main(int argc, char* argv[]){
     unsigned int number_of_curves = 0;
     int buckets;
     int num_of_curve_values = 0;
+    int query_num_of_curve_values = 0;
     int curves_divider = 16;        //USED TO GET TOTAL CURVES IN EACH HASHTABLE
     int continue_execution = 1;
     string name;
@@ -56,6 +59,10 @@ int main(int argc, char* argv[]){
     int M = pow(2, 31) - 5;
     int count = 0;
     double max_value = 0.0;
+    double max_coordinate_value;
+    double query_max_value = 0.0;
+    double query_max_coordinate_value;
+    bool is_query_curve = true;
     string algorithm = "Frechet"; 
     string metric = "discrete";
 
@@ -113,6 +120,8 @@ int main(int argc, char* argv[]){
 
         count++;
     }
+
+    max_coordinate_value = max(max_value, (double)num_of_curve_values);
     
     curves_ID_vector_initialize(number_of_curves, L);
 
@@ -125,8 +134,17 @@ int main(int argc, char* argv[]){
     //INITIALIZE G FUNCTION THAT LEADS US TO HYPERCUBE BUCKETS
     G_Hypercube g_cube(num_of_curve_values, generator, window, k_cube);
 
+    query_file_name = argv[2];
+
+    if(strcmp(argv[0], "./search") == 0){
+
+        query_max_coordinate_value = file_get_max_value(query_file, query_file_name); 
+    }
+    
+    max_coordinate_value = max(max_coordinate_value, query_max_coordinate_value);
+
     //INITIALIZE G FRECHET FUNCTION THAT USES g_lsh
-    G_Frechet g_frechet(g_lsh, generator, L, delta, num_of_curve_values, max_value);
+    G_Frechet g_frechet(g_lsh, generator, L, delta, max_coordinate_value);
 
     if(strcmp(argv[0], "./search") == 0){
 
@@ -139,11 +157,11 @@ int main(int argc, char* argv[]){
             for(int i = 0; i < number_of_curves; i++){
                 if(metric == "discrete"){
 
-                    g_frechet.hash(curve_vector_get_curve(i), hash_vector, id_vector, false, 2);
+                    g_frechet.hash(curve_vector_get_curve(i), hash_vector, id_vector, !is_query_curve, 2);
                 }
                 else if(metric == "continuous"){
 
-                    g_frechet.hash(curve_vector_get_curve(i), hash_vector, id_vector,  false, 1);
+                    g_frechet.hash(curve_vector_get_curve(i), hash_vector, id_vector,  !is_query_curve, 1);
                 }    
                 
             }
@@ -171,15 +189,14 @@ int main(int argc, char* argv[]){
 
     }
 
-    query_file_name = argv[2];
     output_file_name = argv[3];
+
+    query_file.clear();
+    query_file.seekg(0, query_file.beg);
 
     while(continue_execution == 1){
 
         if(strcmp(argv[0], "./search") == 0){
-
-            //OPEN FILE TO READ QUERY FILES FROM
-            open_file(&query_file, query_file_name, fstream::in);
 
             //OPEN FILE TO WRITE RESULTS TO
             open_file(&output_file, output_file_name, fstream::out);
