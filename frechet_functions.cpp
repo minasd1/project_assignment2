@@ -3,7 +3,8 @@
 //RECEIVES A QUERY CURVE AND RETURNS THE FIRST k NEAREST NEIGHBORS IN ASCENDING DISTANCE ORDER
 //THE LAST ARGUMENT IS OPTIONAL AND SHOWS THE MAXIMUM NUMBER OF CURVES TO BE EXAMINED AS POSSIBLE NEAREST NEIGHBORS
 //IF NO FORTH ARGUMENT IS GIVEN THEN ALL THE CURVES IN THE SAME BUCKETS WITH query_curve ARE EXAMINED
-vector<dist_id_pair> frechet_find_approximate_knn_discrete(pair<pair<string, int>, vector<double>>& query_curve, int k,  G_Frechet& g, int max_candidates){
+//DISTANCE BETWEEN CURVES IS CALCULATED USING DISCRETE FRECHET METRIC
+vector<dist_id_pair> frechet_find_approximate_knn(pair<pair<string, int>, vector<double>>& query_curve, int k,  G_Frechet& g, string metric, int max_candidates){
     int curves_in_table_counter= 0; //A COUNTER OF THE ELEMENTS INSIDE THE nn_table
     vector<dist_id_pair> nn_table; //A TABLE IN WHICH THE PAIRS OF {DISTANCE, ID} OF THE NEAREST NEIGHBORING CURVES ARE STORED IN ASCENDIND DISTANCE ORDER
     vector<int> candidate_curves; //A TABLE OF ALL THE {HASHTABLE_INDEX, POINT_ID} PAIRS, WHERE POINT_ID BELONGS TO A CURVE THAT BELONG TO THE SAME BUCKET WITH THE query_curve IN ANY OF THE L HASHTABLES
@@ -21,8 +22,18 @@ vector<dist_id_pair> frechet_find_approximate_knn_discrete(pair<pair<string, int
     bool at_least_one_candidate_has_same_id;
     int same_id_counter;
 
-    //HASH THE QUERY CURVE TO FIND THE BUCKETS WHERE IT WOULD BELONG
-    g.hash(query_curve, buckets_indexes, query_curves_ids, true, 2);
+    Curve query_curve_continuous = convert_for_continuous_frechet(query_curve, 1);
+
+    if(metric == "discrete"){
+
+        //HASH THE QUERY CURVE TO FIND THE BUCKETS WHERE IT WOULD BELONG
+        g.hash(query_curve, buckets_indexes, query_curves_ids, true, 2);
+    }
+    else if(metric == "continuous"){
+
+        g.hash(query_curve, buckets_indexes, query_curves_ids, true, 1);
+    }
+    
     
     //GET ALL THE CANDIDATE POINTS IDS AND THE HASHTABLE WHERE EACH OF THE WAS FOUND
     candidate_curves= hashTable_get_curves_in_buckets(buckets_indexes);
@@ -42,8 +53,19 @@ vector<dist_id_pair> frechet_find_approximate_knn_discrete(pair<pair<string, int
         }
         //GET THE CURRENT CANDIDATE POINT'S COORDINATES AND IT's DISTANCE FROM QUERY POINT
         current_candidate= curve_vector_get_curve(curves_with_same_id[i+1]); //+1 BECAUSE candidate_curves IS [HASHTABLE, CURVE_INDEX, HASHTABLE, ...]
-        //CALCULATE DISCRETE FRECHET DISTANCE
-        distance= curve_calculate_dfd(query_curve, current_candidate);
+
+        if(metric == "discrete"){
+            //CALCULATE DISCRETE FRECHET DISTANCE
+            distance= curve_calculate_dfd(query_curve, current_candidate);
+        }
+        else if(metric == "continuous"){
+            //CONVERT CANDIDATE CURVE TO PROPER FORM FOR CONTINUOUS FRECHET CALCULATIONS
+            Curve current_candidate_continuous = convert_for_continuous_frechet(current_candidate, 1);
+            //CALCULATE CONTINUOUS FRECHET DISTANCE
+            Frechet::Continuous::Distance cfd = Frechet::Continuous::distance(query_curve_continuous, current_candidate_continuous);
+            distance = cfd.value;
+        }
+        
         //CREATE A PAIR WITH THESE TWO VALUES
         current_pair.dist= distance;
         current_pair.id= current_candidate.first.second;
@@ -83,7 +105,18 @@ vector<dist_id_pair> frechet_find_approximate_knn_discrete(pair<pair<string, int
             }
             //GET THE CURRENT CANDIDATE CURVE'S COORDINATES AND IT'S DISTANCE FROM QUERY CURVE
             current_candidate= curve_vector_get_curve(candidate_curves[i+1]);//+1 BECAUSE candidate_points IS [HASHTABLE, POINT_INDEX, HASHTABLE, ...]
-            distance= curve_calculate_dfd(query_curve, current_candidate);
+            if(metric == "discrete"){
+                //CALCULATE DISCRETE FRECHET DISTANCE
+                distance= curve_calculate_dfd(query_curve, current_candidate);
+            }
+            else if(metric == "continuous"){
+                //CONVERT CANDIDATE CURVE TO PROPER FORM FOR CONTINUOUS FRECHET CALCULATIONS
+                Curve current_candidate_continuous = convert_for_continuous_frechet(current_candidate, 1);
+                //CALCULATE CONTINUOUS FRECHET DISTANCE
+                Frechet::Continuous::Distance cfd = Frechet::Continuous::distance(query_curve_continuous, current_candidate_continuous);
+                distance = cfd.value;
+            }
+            
             //CREATE A PAIR WITH THESE TWO VALUES
             current_pair.dist= distance;
             current_pair.id= current_candidate.first.second;
@@ -121,7 +154,7 @@ vector<dist_id_pair> frechet_find_approximate_knn_discrete(pair<pair<string, int
 
 }
 
-vector<dist_id_pair> frechet_find_exact_knn_discrete(pair<pair<string, int>, vector<double>>& query_curve, int k, int num_of_curves){
+vector<dist_id_pair> frechet_find_exact_knn(pair<pair<string, int>, vector<double>>& query_curve, int k, int num_of_curves, string metric){
     int i;
     vector<dist_id_pair> nn_table; //A TABLE IN WHICH THE PAIRS OF {DISTANCE, ID} OF THE NEAREST //NEIGHBORING POINTS ARE STORED IN ASCENDIND DISTANCE ORDER
     pair<pair<string, int>, vector<double>> current_candidate;
@@ -129,10 +162,23 @@ vector<dist_id_pair> frechet_find_exact_knn_discrete(pair<pair<string, int>, vec
     int curves_in_table_counter= 0;
     double max_distance, distance;
 
+    Curve query_curve_continuous = convert_for_continuous_frechet(query_curve, 1);
+
     //FOR ALL THE CANDIDATE CURVES
     for (i=0; i < num_of_curves ; i++) {
         current_candidate= curve_vector_get_curve(i);
-        distance= curve_calculate_dfd(query_curve, current_candidate);
+        if(metric == "discrete"){
+            //CALCULATE DISCRETE FRECHET DISTANCE
+            distance= curve_calculate_dfd(query_curve, current_candidate);
+        }
+        else if(metric == "continuous"){
+            //CONVERT CANDIDATE CURVE TO PROPER FORM FOR CONTINUOUS FRECHET CALCULATIONS
+            Curve current_candidate_continuous = convert_for_continuous_frechet(current_candidate, 1);
+            //CALCULATE CONTINUOUS FRECHET DISTANCE
+            Frechet::Continuous::Distance cfd = Frechet::Continuous::distance(query_curve_continuous, current_candidate_continuous);
+            distance = cfd.value;
+        }
+        
         //CREATE A PAIR WITH THESE TWO VALUES
         current_pair.dist= distance;
         current_pair.id= current_candidate.first.second;

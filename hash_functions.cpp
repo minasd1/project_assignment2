@@ -202,22 +202,35 @@ G_Frechet::G_Frechet(G_Lsh g_func, engine gen, int L_num, double delta_value, do
 //CURRENT CURVE'S ID MUST BE INSERTED TO
 void G_Frechet::hash(const pair<pair<string, int>, vector<double>>& curve, vector<int>& hash_vector, vector<int>& id_vector, bool is_query, int grid_dimensions)
 {
-    pair<pair<string, int>, vector<double>> snapped_curve;
+    pair<pair<string, int>, vector<double>> snapped_curve, filtered_curve;
     vector<int> hash_values;
+    double epsilon = 0.1;
 
     //SNAPPED CURVE MUST HAVE THE SAME STRING AND ID VALUE WITH THE INITIAL CURVE
     snapped_curve.first.first = curve.first.first;
     snapped_curve.first.second = curve.first.second;
 
+    filtered_curve.first.first = curve.first.first;
+    filtered_curve.first.second = curve.first.second;
+
+    //CONTINUOUS FRECHET - CURVE NEEDS TO BE FILTERED FIRST
+    if(grid_dimensions == 1){
+
+        filter(curve.second, filtered_curve.second, epsilon);
+    }
+
     //FOR EVERY HASHTABLE
     for(int i = 1; i <= L; i++){
         
-        //SNAP CURVE TO CURRENT GRID
-        snap_to_grid(curve, snapped_curve.second, grid_dimensions, i-1);
+        if(grid_dimensions == 2){       //DISCRETE FRECHET
 
-        //CONTINUOUS FRECHET
-        if(grid_dimensions == 1){
-            
+            //SNAP CURVE TO CURRENT GRID
+            snap_to_grid(curve, snapped_curve.second, grid_dimensions, i-1);
+        }
+        else if(grid_dimensions == 1){  //CONTINUOUS FRECHET 
+
+            snap_to_grid(filtered_curve,snapped_curve.second, grid_dimensions, i-1);
+
             minima_maxima(snapped_curve.second);
         }
         
@@ -246,6 +259,24 @@ void G_Frechet::hash(const pair<pair<string, int>, vector<double>>& curve, vecto
     
     hash_vector.clear();
     
+}
+
+//GET A CURVE FROM INPUT AND FILTER IT SO THAT SMALL CHANGES IN CURVES 
+//VALUES WILL BE IGNORED
+void G_Frechet::filter(const vector<double>& curve, vector<double>& filtered_curve, double epsilon){
+
+    filtered_curve.push_back(curve[0]);
+
+    for(int i = 1; i < curve.size() - 1; i++){
+
+        if((abs(curve[i-1] - curve[i]) > epsilon) || (abs(curve[i] - curve[i+1]) > epsilon)){
+
+            filtered_curve.push_back(curve[i]);
+        }
+    }
+
+    filtered_curve.push_back(curve[curve.size() - 1]);
+
 }
 
 //GET A CURVE FROM INPUT AND SNAP IT TO GRID

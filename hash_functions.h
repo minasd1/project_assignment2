@@ -62,6 +62,7 @@ class G_Frechet{
     public:
         G_Frechet(G_Lsh g, engine gen, int L_num, double delta_value, double max_value);
         void hash(const pair<pair<string, int>, vector<double>>& curve, vector<int>& hash_vector, vector<int>& id_vector, bool is_query, int grid_dimensions);
+        void filter(const vector<double>& curve, vector<double>& filtered_curve, double epsilon);
         void snap_to_grid(const pair<pair<string, int>, vector<double>>& curve, vector<double>& snapped_curve, int grid_dimensions, int grid_num);
         void padding(vector<double>& snapped_curve, int grid_dimensions);
         void minima_maxima(vector<double>& snapped_curve);
