@@ -18,6 +18,7 @@
 #include "cube.h"
 #include "frechet_functions.h"
 #include "read_file_data.h"
+#include "cmd_line_args.h"
 
 
 int main(int argc, char* argv[]){
@@ -39,38 +40,46 @@ int main(int argc, char* argv[]){
     fstream query_file;             //FILE WE READ QUERIES FROM
     fstream config_file;            //CLUSTER CONFIGURATION FILE
     fstream output_file;            //FILE TO WRITE OUTPUT TO
-    string line;
+    
+    string line, token, algorithm, metric, name;
     string input_file_name, query_file_name, output_file_name, config_file_name;
-    int start;
-    int finish = 0;
-    bool first_iteration = true;
-    string token;
-    unsigned int number_of_curves = 0;
-    int buckets;
-    int num_of_curve_values = 0;
-    int query_num_of_curve_values = 0;
+   
+    int start, finish, buckets, id, count, M, num_of_curve_values, 
+        query_num_of_curve_values, continue_execution, sum_approximate_time, 
+        sum_exact_time, query_curves_counted; 
+    
     int curves_divider = 16;        //USED TO GET TOTAL CURVES IN EACH HASHTABLE
-    int continue_execution = 1;
-    string name;
-    int id;
-    unsigned int hash_value;
+    
+    bool is_query_curve, first_iteration, complete_flag;
+
+    unsigned int hash_value, number_of_curves ;
+ 
     vector<double> values;
-    vector<int> hash_vector;
-    vector<int> id_vector;
-    int M = pow(2, 31) - 5;
-    int count = 0;
-    double max_value = 0.0;
-    double max_coordinate_value;
-    double query_max_value = 0.0;
-    double query_max_coordinate_value;
-    bool is_query_curve = true;
-    string algorithm = "Frechet"; 
-    string metric = "continuous";
+    vector<int> hash_vector, id_vector;
+    pair<pair<string, int>, vector<double>> current_curve;
+
+    double max_coordinate_value, max_value, query_max_value, query_max_coordinate_value;
+    double maf; //MAXIMUM APPROXIMATION FACTOR
+
+    finish = 0;
+    count = 0;
+    M = pow(2, 31) - 5;
+    num_of_curve_values = 0;
+    query_num_of_curve_values = 0;
+    number_of_curves = 0;
+    continue_execution = 1;
+    max_value = 0.0;
+    query_max_value = 0.0;
+    is_query_curve = true;
+    first_iteration = true;
+    complete= false;
+
+    read_cmd_args(argc, argv, input_file_name, query_file_name, k, k_cube, L, output_file_name, 
+                  N, R, M_cube, probes, config_file_name, complete_flag, algorithm, 
+                  metric, delta);
 
     unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
     default_random_engine generator(seed);
-
-    input_file_name = argv[1];      //NEEDS TO BE CHANGED(BY USING CMD_LINE_ARGS)
 
     open_file(&input_file, input_file_name, fstream::in);   //OPEN INPUT FILE
 
@@ -135,8 +144,6 @@ int main(int argc, char* argv[]){
     //INITIALIZE G FUNCTION THAT LEADS US TO HYPERCUBE BUCKETS
     G_Hypercube g_cube(num_of_curve_values, generator, window, k_cube);
 
-    query_file_name = argv[2];
-
     if(strcmp(argv[0], "./search") == 0){
 
         query_max_coordinate_value = file_get_max_value(query_file, query_file_name); 
@@ -190,8 +197,6 @@ int main(int argc, char* argv[]){
 
     }
 
-    output_file_name = argv[3];
-
     query_file.clear();
     query_file.seekg(0, query_file.beg);
 
@@ -204,6 +209,9 @@ int main(int argc, char* argv[]){
 
             finish = 0;
 
+            maf= 0.0;
+            sum_approximate_time= 0;
+            sum_exact_time= 0;
             //FOR EVERY QUERY CURVE
             while(getline(query_file, line)){                       //READ QUERY FILE LINE BY LINE
 
@@ -257,28 +265,36 @@ int main(int argc, char* argv[]){
                     auto time_brute = std::chrono::duration_cast<std::chrono::microseconds>(stop_time2 - start_time2);
                     //PRINTING IN OUTPUT FILE
                     output_file << "Query: " << query_curve.first.first << endl;
-                    output_file << "Algorithm: " << algorithm << endl;
+                    output_file << "Algorithm: LSH_Vector" << endl;
                     for (int i= 1; i <= N ; i++) {
                         if (i > curves_lsh.size()) {
-                            output_file << "Nearest neighbor-" << i<< ": Not enough points in buckets (Consider to decrease hash table size or window)" << endl;
+                            output_file << "Approximate Nearest neighbor-" << i<< ": Not enough points in buckets (Consider to decrease hash table size or window)" << endl;
                             output_file << "distanceLSH: Not enough points in buckets (Consider to decrease hash table size or window)" << endl;
                             continue;
                         }
-                        output_file << "Nearest neighbor-" << i<< ": " << curves_lsh[i-1].id << endl;
-                        output_file << "distanceLSH: " << curves_lsh[i-1].dist << endl;
+                        output_file << "Approximate Nearest neighbor-" << i<< ": ";
+                        current_curve= curve_vector_get_curve(curves_lsh[i-1].id);
+                        output_file << current_curve.first.first << endl;
+                        output_file << "True Nearest neighbor-" << i<< ": ";
+                        current_curve= curve_vector_get_curve(curves_brute[i-1].id);
+                        output_file << current_curve.first.first << endl;
+                        output_file << "distanceApproximate: " << curves_lsh[i-1].dist << endl;
                         output_file << "distanceTrue: " << curves_brute[i-1].dist << endl;
-                        
+                        output_file << endl;
                     }
-                    output_file <<  "tLSH: " << time_lsh.count() << " microseconds" << endl;
-                    output_file << "tTrue: " << time_brute.count() << " microseconds" << endl;
-                    output_file << endl;
+                    if ((curves_lsh[0].dist / (double) curves_brute[0].dist) > maf) {
+                        maf= curves_lsh[0].dist / (double) curves_brute[0].dist;
+                    }
+                    query_curves_counted++;
+                    sum_approximate_time+= time_lsh.count();
+                    sum_exact_time+= time_brute.count();
                 }
                 else if(algorithm == "Hypercube"){
                     g_cube.hash(query_curve, hash_value, 1);
                     vector<dist_id_pair> curves_cube, curves_brute;
                     int count_nn;
                     output_file << "Query: " << query_curve.first.first << endl;
-                    output_file << "Algorithm: " << algorithm << endl;
+                    output_file << "Algorithm: " << "Hypercube" << endl;
                     //--------------
                     //CUBE NEAREST NEIGHBORS
                     //FIND TIME CUBE - APPROXIMATE NEIGHBORS
@@ -296,39 +312,50 @@ int main(int argc, char* argv[]){
                     for (int i= 1; i <= N ; i++) {
                         //IF NO POINTS FOUND
                         if(curves_cube[i-1].id == -1){
+                            output_file << "Approximate Neighrest neighbor - " << i << ": ";
                             output_file << "No points found in query's bucket or it's relative buckets" << endl;
                         }
                         //IF AT LEAST i POINTS HAVE BEEN FOUND
                         else if (i <= count_nn){
-                            output_file << "Nearest neighbor-" << i<< ": " << curves_cube[i-1].id << endl;
-                            output_file << "distanceCUBE: " << curves_cube[i-1].dist << endl;
-                        }
+                            output_file << "Approximate Nearest Neighbor - " << i<< ": ";
+                            current_curve= curve_vector_get_curve(curves_cube[i-1].id);
+                            output_file << current_curve.first.first << endl;
+                            output_file << "True Nearest Neighbor - " << i<< ": ";
+                            current_curve= curve_vector_get_curve(curves_brute[i-1].id);
+                            output_file << current_curve.first.first << endl;
+                            output_file << "distanceApproximate: " << curves_cube[i-1].dist << endl;
+                            }
                         //IF LESS THAN N POINTS HAVE BEEN FOUND, FOR THE REMAINING (NOT FOUND) POINTS
                         else {
-                            output_file << "Nearest neighbor-" << i<< ": No more points found in query's bucket or (relative) buckets" << endl;
+                            output_file << "Nearest neighbor - " << i<< ": No more points found in query's bucket or (relative) buckets" << endl;
                             output_file << "distanceCUBE: - " << endl;
                         }
 
                         output_file << "distanceTrue: " << curves_brute[i-1].dist << endl;
+                        output_file << endl;
                         
                     }
-                    output_file <<  "tCUBE: " << time_cube.count() << " microseconds" << endl;
-                    output_file << "tTrue: " << time_brute.count() << " microseconds" << endl;
-                    output_file << endl;
+                    if ((curves_cube[0].dist / curves_brute[0].dist) > maf) {
+                        maf= curves_cube[0].dist /(double) curves_brute[0].dist;
+                    }
+                    query_curves_counted++;
+                    sum_approximate_time+= time_cube.count();
+                    sum_exact_time+= time_brute.count();
+                    
                     //-----------------
                 }
                 else if(algorithm == "Frechet"){
                         
                     //auto tApproximateAverage = 0;
-                    vector<dist_id_pair> curves_discrete_frechet, curves_brute;
+                    vector<dist_id_pair> curves_frechet, curves_brute;
 
                     //DISCRETE FRECHET NEAREST NEIGHBORS
                     //FIND TIME DISCRETE FRECHET - APPROXIMATE NEIGHBORS
 
                     auto start_time = std::chrono::high_resolution_clock::now();
-                    curves_discrete_frechet= frechet_find_approximate_knn(query_curve, N, g_frechet, metric);
+                    curves_frechet= frechet_find_approximate_knn(query_curve, N, g_frechet, metric);
                     auto stop_time = std::chrono::high_resolution_clock::now();
-                    auto time_discrete_frechet = std::chrono::duration_cast<std::chrono::microseconds>(stop_time - start_time);
+                    auto time_frechet = std::chrono::duration_cast<std::chrono::microseconds>(stop_time - start_time);
                     //tApproximateAverage = (tApproximateAverage + time_discrete_frechet);
 
                     //FIND TIME BRUTE FORCE - EXACT NEIGHBORS
@@ -346,19 +373,27 @@ int main(int argc, char* argv[]){
                     }
                     
                     for (int i= 1; i <= N ; i++) {
-                        if (i > curves_discrete_frechet.size()) {
+                        if (i > curves_frechet.size()) {
                             output_file << "Nearest neighbor-" << i<< ": Not enough points in buckets (Consider to decrease hash table size or window)" << endl;
                             output_file << "distanceApproximate: Not enough points in buckets (Consider to decrease hash table size or window)" << endl;
                             continue;
                         }
-                        output_file << "Approximate Nearest neighbor-" << i<< ": " << curves_discrete_frechet[i-1].id << endl;
-                        output_file << "True Nearest neighbor: " << curves_brute[i-1].id << endl;
-                        output_file << "distanceApproximate: " << curves_discrete_frechet[i-1].dist << endl;
+                        output_file << "Approximate Nearest neighbor-" << i<< ": ";
+                        current_curve= curve_vector_get_curve(curves_frechet[i-1].id);
+                        output_file << current_curve.first.first << endl;
+                        output_file << "True Nearest neighbor-" << i<< ": ";
+                        current_curve= curve_vector_get_curve(curves_brute[i-1].id);
+                        output_file << current_curve.first.first << endl;
+                        output_file << "distanceApproximate: " << curves_frechet[i-1].dist << endl;
                         output_file << "distanceTrue: " << curves_brute[i-1].dist << endl;
+                        output_file << endl;
                     }
-                    output_file <<  "tApproximate: " << time_discrete_frechet.count() << " microseconds" << endl;
-                    output_file << "tTrue: " << time_brute.count() << " microseconds" << endl;
-                    output_file << endl;
+                    if ((curves_frechet[0].dist / (double) curves_brute[0].dist) > maf) {
+                        maf= curves_frechet[0].dist / (double) curves_brute[0].dist;
+                    }
+                    query_curves_counted++;
+                    sum_approximate_time+= time_frechet.count();
+                    sum_exact_time+= time_brute.count();
                     
                 
                 }
@@ -367,6 +402,9 @@ int main(int argc, char* argv[]){
                 hash_vector.clear();
 
             }
+            output_file << "tApproximateAverage: " << sum_approximate_time / (double) query_curves_counted << endl;
+            output_file << "tTrueAverage: " << sum_exact_time / (double) query_curves_counted << endl;
+            output_file << "MAF: " << maf << endl;
 
             close_file(&query_file);
             close_file(&output_file);
