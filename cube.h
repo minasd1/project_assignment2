@@ -11,7 +11,7 @@
 
 using namespace std;
 
-//vector<int> cube_range_search(int g, int radius, int probes, int dimensions, vector<int>& query_point);
+vector<int> cube_range_search(int g, int radius, int probes, int dimensions, pair<pair<string, int>, vector<double>>& query_curve);
 vector<dist_id_pair> cube_find_approximate_knn(pair<pair<string, int>, vector<double>>& query_curve, int k,  G_Hypercube& g, int probes, int dimensions, int& count_nn, int max_candidates=-1);
 
 

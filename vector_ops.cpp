@@ -132,7 +132,7 @@ double centroids_get_radii(){
 
     double min_distance = numeric_limits<double>::max();
     double current_distance;
-
+    cout << "number of centroids is " << centroids.size() << endl;
     for (int i = 0; i < centroids.size(); i++){
 
         for(int j = 0; j < centroids.size(); j++){
@@ -162,7 +162,7 @@ void centroids_pick_first_centroid(){
     uniform_int_distribution<int> p_distribution(1, curve_vector.size());
 
     first_centroid_id = p_distribution(generator);
-
+    
     //INSERT THE FIRST CENTROID ID TO CENTROIDS VECTOR
     centroids.push_back(first_centroid_id);
 }
