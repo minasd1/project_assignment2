@@ -132,7 +132,7 @@ double centroids_get_radii(){
 
     double min_distance = numeric_limits<double>::max();
     double current_distance;
-    cout << "number of centroids is " << centroids.size() << endl;
+   
     for (int i = 0; i < centroids.size(); i++){
 
         for(int j = 0; j < centroids.size(); j++){
@@ -162,7 +162,7 @@ void centroids_pick_first_centroid(){
     uniform_int_distribution<int> p_distribution(1, curve_vector.size());
 
     first_centroid_id = p_distribution(generator);
-    
+
     //INSERT THE FIRST CENTROID ID TO CENTROIDS VECTOR
     centroids.push_back(first_centroid_id);
 }
@@ -316,6 +316,17 @@ void centroids_get_hashtable_hashes(G_Lsh g, vector<vector<int>>& hashes){
     for(int i = 0; i < centroids.size(); i++){
         g.hash(curve_vector_get_curve(centroids[i]), hash_vector, 1, 0);
         hashes.push_back(hash_vector);
+    }
+}
+
+//GET EVERY CENTROID'S HYPERCUBE BUCKET HASH
+void centroids_get_hypercube_hashes(G_Hypercube g, vector<int>& hashes){
+
+    unsigned int hash_value;
+
+    for(int i = 0; i < centroids.size(); i++){
+        g.hash(curve_vector_get_curve(centroids[i]), hash_value, 1);
+        hashes.push_back(hash_value);
     }
 }
 

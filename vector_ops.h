@@ -57,6 +57,7 @@ void centroids_duplicates_assign_to_nearest_centroid(vector<pair<vector<int>,int
 float centroids_calculate_min_distance_curve(vector<double>& curve);
 void centroids_calculate_min_distance_input(vector<float>& curves_min_distances);
 void centroids_get_hashtable_hashes(G_Lsh g, vector<vector<int>>& hashes);
+void centroids_get_hypercube_hashes(G_Hypercube g, vector<int>& hashes);
 void centroids_print_data();
 
 /*-----------------------IS ASSIGNED VECTOR FUNCTIONS-----------------------*/

@@ -31,7 +31,7 @@ void reverse_assignment_lsh(G_Lsh g, fstream& output_file, int k, bool complete_
     vector<vector<int>> cluster_table;   //TABLE WITH ALL THE CURVES IN EACH CLUSTER
     vector<vector<int>> hashes;          //INDEXES THAT LEAD CENTROIDS TO HASHTABLE BUCKETS
     vector<int> current_point;
-    int radius = centroids_get_radii();  //SET MINIMUM DISTANCE BETWEEN CENTROIDS DIVIDED BY 2 AS FIRST RADIUS
+    int radius; 
     int last_id = curve_vector_get_size();
     bool first_iteration = true;
     int new_curves_assigned = 0;
@@ -42,6 +42,7 @@ void reverse_assignment_lsh(G_Lsh g, fstream& output_file, int k, bool complete_
     //START COUNTING TIME
     auto start_time = std::chrono::high_resolution_clock::now();
     k_means_plus_plus(k);                //INITIALIZE K CENTROIDS USING K-MEANS++ ALGORITHM
+    radius = centroids_get_radii();      //SET MINIMUM DISTANCE BETWEEN CENTROIDS DIVIDED BY 2 AS FIRST RADIUS
 
     do{
 
@@ -74,7 +75,7 @@ void reverse_assignment_lsh(G_Lsh g, fstream& output_file, int k, bool complete_
 
         for(int i = 0; i < centroids_get_size(); i++){
 
-            //GET CENTROID'S COORDINANCES BY ACCESSING THE POINT VECTOR DATA
+            //GET CENTROID'S COORDINATES BY ACCESSING THE POINT VECTOR DATA
             centroid = curve_vector_get_curve(centroids_get_centroid(i));
             //AND PERFORM RANGE SEARCH - 0 IS THE FIRST INDEX OF AN UNASSIGNED CURVE AT START
             appending_curves = lsh_range_search(hashes[i], radius, centroid);
@@ -109,4 +110,103 @@ void reverse_assignment_lsh(G_Lsh g, fstream& output_file, int k, bool complete_
     //WHEN THE CLUSTERS HAVE BEEN DEFINITIVELY FORMED STOP COUNTING TIME
     auto stop_time = std::chrono::high_resolution_clock::now();
 
+}
+
+void reverse_assignment_cube(G_Hypercube g, fstream& output_file, int k, int probes, bool complete_flag){
+
+    pair<pair<string, int>, vector<double>> centroid; //HERE CENTROIDS ARE THE QUERY POINTS
+    vector<int> appending_curves;        //NEW CURVES THAT WILL BE ADDED TO CLUSTERS   
+    vector<pair<vector<int>,int>> curves_in_range; //ALL THE CURVES THAT ARE INSIDE THE GIVEN RADIUS FROM EVERY CENTROID
+    vector<vector<int>> cluster_table;   //TABLE WITH ALL THE CURVES IN EACH CLUSTER
+    vector<int> hashes;          //INDEXES THAT LEAD CENTROIDS TO HASHTABLE BUCKETS
+    vector<int> current_point;
+    int radius; 
+    int last_id = curve_vector_get_size();
+    bool first_iteration = true;
+    int new_curves_assigned = 0;
+    int previous_curves_assigned = 0;
+    int num_of_curves = curve_vector_get_size();
+    int complexity = curve_vector_get_curve(0).second.size(); //COMPLEXITY OF CURVES //dimensions previously
+
+    //START COUNTING TIME
+    auto start_time = std::chrono::high_resolution_clock::now();
+    k_means_plus_plus(k);                //INITIALIZE K CENTROIDS USING K-MEANS++ ALGORITHM
+    radius = centroids_get_radii();      //SET MINIMUM DISTANCE BETWEEN CENTROIDS DIVIDED BY 2 AS FIRST RADIUS
+
+    do{
+
+        //GET EVERY CENTROID'S HYPERCUBE BUCKET HASH
+        centroids_get_hypercube_hashes(g, hashes);
+        //FOR EVERY CENTROID
+        for(int i = 0; i < centroids_get_size(); i++){
+            //GET CENTROID'S COORDINATES BY ACCESSING THE POINT VECTOR DATA
+            centroid = curve_vector_get_curve(centroids_get_centroid(i));
+            if(first_iteration){ //0 IS THE FIRST INDEX OF AN UNASSIGNED CURVE AT START - ALL CURVES UNASSIGNED
+                curves_in_range.push_back(make_pair(cube_range_search(hashes[i], radius, probes, complexity, centroid), 0));
+            }
+            else{
+                appending_curves = cube_range_search(hashes[i], radius, probes, complexity, centroid);
+                curves_in_range[i].first.insert(curves_in_range[i].first.end(), appending_curves.begin(),
+                                                                                appending_curves.end());
+                appending_curves.clear();
+            }
+
+            //PARTITION POINTS IN RANGE OF CENTROID i TO ALREADY ASSIGNED AND NOT ASSIGNED
+            partition_assigned_unassigned(curves_in_range[i]);
+
+            //hash_vector.clear();    //WE MUST CLEAR THE HASH VECTOR AFTER EVERY ITERATION
+        }
+
+         //IF A POINT HAS BEEN ASSIGNED TO MORE THAN ONE CENTROIDS, ASSIGN IT TO THE NEAREST CENTROID
+        centroids_duplicates_assign_to_nearest_centroid(curves_in_range);
+
+        radius = radius*2;
+
+        for(int i = 0; i < centroids_get_size(); i++){
+
+            //GET CENTROID'S COORDINATES BY ACCESSING THE POINT VECTOR DATA
+            centroid = curve_vector_get_curve(centroids_get_centroid(i));
+            //AND PERFORM RANGE SEARCH - 0 IS THE FIRST INDEX OF AN UNASSIGNED CURVE AT START
+            appending_curves = cube_range_search(hashes[i], radius, probes, complexity, centroid);
+
+            curves_in_range[i].first.insert(curves_in_range[i].first.end(), appending_curves.begin(),
+                                                                                    appending_curves.end());
+            //PARTITION CURVES IN RANGE OF CENTROID i TO ALREADY ASSIGNED AND NOT ASSIGNED
+            partition_assigned_unassigned(curves_in_range[i]);
+
+
+            appending_curves.clear();
+            //hash_vector.clear();    //WE MUST CLEAR THE HASH VECTOR AFTER EVERY ITERATION
+        }
+
+        //IF A CURVE HAS BEEN ASSIGNED TO MORE THAN ONE CENTROIDS, ASSIGN IT TO THE NEAREST CENTROID
+        centroids_duplicates_assign_to_nearest_centroid(curves_in_range);
+        new_curves_assigned = is_assigned_count_assigned();
+
+        get_cluster_table(curves_in_range, cluster_table);
+
+        //IF THERE ARE NO ANY NEW ASSIGNMENTS TO THE CLUSTERS
+        if(new_curves_assigned == previous_curves_assigned){
+            break;
+        }
+
+        previous_curves_assigned = new_curves_assigned;
+
+        first_iteration = false;
+
+    }while(1);
+
+    //WHEN THE CLUSTERS HAVE BEEN DEFINITIVELY FORMED STOP COUNTING TIME
+    auto stop_time = std::chrono::high_resolution_clock::now();
+
+    for(int i = 0; i < curves_in_range.size(); i++){
+       cout << "Cluster " << i << ":" << endl;
+       cout << "cluster size is " << curves_in_range[i].first.size() << endl;
+       for(int j = 0; j < curves_in_range[i].first.size(); j++){
+           cout << curves_in_range[i].first[j] << " ";
+       }
+       cout << endl;
+       cout << "pointer of unassigned is " << curves_in_range[i].second << endl;
+   }
+   cout << "number of assigned curves is " << is_assigned_count_assigned() << endl;
 }
