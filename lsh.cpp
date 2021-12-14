@@ -190,15 +190,15 @@ vector<dist_id_pair> find_exact_knn(pair<pair<string, int>, vector<double>>& que
 }
 
 
-/*
+
 //IMPLEMENT APPROXIMATE RANGE SEARCH ALGORITHM
-vector<int> lsh_range_search(vector<int>& g, int radius, vector<int>& query_point){
+vector<int> lsh_range_search(vector<int>& g, int radius, pair<pair<string, int>, vector<double>>& query_curve){
 
     int retrieved_items = 0;
     int count = 0;
     int max_retrieved_items = 20* hashTable_get_num_of_htables();
 
-    vector<int> points_in_range;
+    vector<int> curves_in_range;
 
     //ACCESS TO I-TH HASHTABLE
     for(int i = 0; i < hashTable_get_num_of_htables(); i++){
@@ -206,18 +206,18 @@ vector<int> lsh_range_search(vector<int>& g, int radius, vector<int>& query_poin
         //ACCESS TO THE SPECIFIC BUCKET THAT I-TH G FUNCTION INDICATES
         for(int j = 0; j < hashTable_get_bucket_size(i, g[i]); j++){
             //IF INPUT POINT IS NOT THE SAME AS THE QUERY POINT AND DOES NOT ALREADY EXIST IN POINTS IN RANGE
-            if((query_point[0] != hashTable_get_point(i, g[i], j))
-        && (!already_exists(points_in_range, hashTable_get_point(i, g[i], j))) 
-        && (!already_assigned(hashTable_get_point(i, g[i], j) - 1))){   //ALSO CHECK THAT IT IS NOT ASSIGNED ALREADY - CLUSTERING
+            if((query_curve.first.second != hashTable_get_curve(i, g[i], j))
+        && (!already_exists(curves_in_range, hashTable_get_curve(i, g[i], j))) 
+        && (!already_assigned(hashTable_get_curve(i, g[i], j)))){   //ALSO CHECK THAT IT IS NOT ASSIGNED ALREADY - CLUSTERING
                 //IF DISTANCE OF J-TH POINT IN THIS BUCKET IS IN THE GIVEN RADIUS
-                if((calculate_distance(query_point, point_vector_get_point(hashTable_get_point(i, g[i], j) - 1), 2)) < radius){
+                if((calculate_distance(query_curve.second, curve_vector_get_curve(hashTable_get_curve(i, g[i], j)).second, 2)) < radius){
                     //THEN ADD IT'S ID TO POINTS_IN_RANGE VECTOR
-                    points_in_range.push_back(hashTable_get_point(i, g[i], j));
+                    curves_in_range.push_back(hashTable_get_curve(i, g[i], j));
                     retrieved_items++;
 
                     if(retrieved_items == max_retrieved_items){
 
-                        return points_in_range;
+                        return curves_in_range;
                     }
                 }
                 
@@ -225,6 +225,5 @@ vector<int> lsh_range_search(vector<int>& g, int radius, vector<int>& query_poin
         }
     }
     
-    return points_in_range;
+    return curves_in_range;
 }
-*/

@@ -126,6 +126,31 @@ vector<int> centroids_get_table(){
     return centroid_ids;
 }
 
+//GET THE MINIMUM DISTANCE BETWEEN CENTROIDS
+//USED AS A STARTING RANGE IN REVERSE ASSIGNMENT
+double centroids_get_radii(){
+
+    double min_distance = numeric_limits<double>::max();
+    double current_distance;
+
+    for (int i = 0; i < centroids.size(); i++){
+
+        for(int j = 0; j < centroids.size(); j++){
+
+            if(i != j){
+
+                current_distance = calculate_distance(curve_vector[centroids[i]].second, curve_vector[centroids[j]].second, 2);
+                if(current_distance < min_distance){
+
+                    min_distance = current_distance;
+                }
+            }
+        }
+    }
+
+    return min_distance/2;
+}
+
 void centroids_pick_first_centroid(){
 
     int first_centroid_id;
@@ -178,6 +203,71 @@ void centroids_pick_next_centroid(vector<float>& partial_sums){
     centroids.push_back(r);
 }
 
+//FIND THE NEAREST CENTROID OF A GIVEN CURVE
+int centroids_find_nearest_centroid(vector<int>& centroids_with_same_id, int id){
+
+    //GET CURVE'S COORDINATES
+    pair<pair<string, int>, vector<double>> curve = curve_vector_get_curve(id);
+
+    //INITIALIZE THE MIN DISTANCE OF POINT FROM THE CENTROIDS WITH THE MAX VALUE
+    double min_distance = numeric_limits<double>::max();
+    double current_distance;
+    int centroid_with_min_distance; //INDEX OF CENTROID WITH MIN DISTANCE
+    int size = centroids_with_same_id.size();
+
+    for(int i = 0; i < size; i++){
+
+        current_distance = calculate_distance(curve_vector[centroids_with_same_id[i]].second, curve.second);
+
+        if(current_distance < min_distance){
+
+            min_distance = current_distance;
+            centroid_with_min_distance = i;
+        }
+    }
+
+    return centroid_with_min_distance;
+}
+
+void centroids_duplicates_assign_to_nearest_centroid(vector<pair<vector<int>,int>>& curves_in_range){
+
+    vector<int> centroids_with_same_id;
+    int nearest_centroid;
+    //FOR ALL THE CENTROIDS
+    for(int i = 0; i < curves_in_range.size(); i++){
+        //FOR ALL THE POINTS ASSIGNED TO THEM
+        for(int k = 0; k < curves_in_range[i].first.size(); k++){
+
+            centroids_with_same_id.push_back(centroids_get_centroid(i));
+            //FOR ALL THE OTHER CENTROIDS
+            for(int j = i+1; j < curves_in_range.size(); j++){
+                //SEARCH IF THERE IS ANOTHER CENTROID THAT HAS THE SAME ID
+                search_if_in_range(curves_in_range[j], centroids_with_same_id, curves_in_range[i].first[k], j);
+
+            }   //IF THERE ARE MORE THAN ONE CENTROIDS THAT HAVE THE SAME ID
+            if(centroids_with_same_id.size() >= 2){
+                //FIND THE NEAREST CENTROID TO THE POINT WITH THIS ID
+                nearest_centroid = centroids_find_nearest_centroid(centroids_with_same_id, curves_in_range[i].first[k]);
+
+                for(int centroid = 0; centroid < centroids.size(); centroid++){
+                    
+                    if(centroid != nearest_centroid){
+                        //REMOVE CURVE ID FROM ALL THE CENTROID THAT DO NOT HAVE MINIMUM DISTANCE WITH IT
+                        update_curves_in_range(curves_in_range[centroid], curves_in_range[i].first[k]);
+                    }
+                    
+    
+                }
+            }
+            centroids_with_same_id.clear();
+        }
+    }
+ 
+    //LABEL ALL THE ASSIGNED CURVES AS ASSIGNED
+    label_assigned_curves(curves_in_range);
+
+}
+
 float centroids_calculate_min_distance_curve(vector<double>& curve){
 
     float min_distance = numeric_limits<float>::max();
@@ -218,12 +308,154 @@ void centroids_calculate_min_distance_input(vector<float>& curves_min_distances)
     }
 }
 
+//GET EVERY CENTROID'S HASHTABLE BUCKET HASHES
+void centroids_get_hashtable_hashes(G_Lsh g, vector<vector<int>>& hashes){
+
+    vector<int> hash_vector;
+
+    for(int i = 0; i < centroids.size(); i++){
+        g.hash(curve_vector_get_curve(centroids[i]), hash_vector, 1, 0);
+        hashes.push_back(hash_vector);
+    }
+}
+
 //PRINT CENTROIDS IDS - USED FOR CHECKING PURPOSES
 void centroids_print_data(){
 
     for(int i = 0; i < centroids.size(); i++){
         cout << centroids[i] << endl;
     }
+}
+
+//INITIALIZE THE VECTOR WITH POINT_VECTOR SIZE
+//AND ALL IT'S VALUES TO FALSE
+void is_assigned_initialize(){
+
+    int size = curve_vector_get_size();
+    is_assigned.resize(size);
+
+}
+
+//GET SIZE OF IS_ASSIGNED DATA STRUCTURE (IT MUST BE EQUAL WITH NUM_OF_POINTS)
+int is_assigned_get_size(){
+
+    return is_assigned.size();
+}
+
+//COUNT NUMBER OF POINTS THAT ARE ASSIGNED
+int is_assigned_count_assigned(){
+    int assigned_num = 0;
+
+    for(int i = 0; i < is_assigned.size(); i++){
+        if(is_assigned[i] == true){
+            assigned_num++;
+        }
+    }
+
+    return assigned_num;
+}
+
+//COUNT NUMBER OF POINTS THAT ARE NOT ASSIGNED
+int is_assigned_count_unassigned(){
+    int assigned_num = 0;
+
+    for(int i = 0; i < is_assigned.size(); i++){
+        if(is_assigned[i] == false){
+            assigned_num++;
+        }
+    }
+
+    return assigned_num;
+}
+
+//REVERSE ASSIGNMENT - CLUSTERING: IF A POINT IS ASSIGNED TO A CENTROID
+//THEN MARK IT AS ASSIGNED
+void mark_as_assigned(int index){
+
+    is_assigned[index] = true;
+}
+
+//CHECK IF AN INPUT POINT IS ALREADY ASSIGNED TO A CLUSTER
+bool already_assigned(int index){
+
+    if(is_assigned[index] == true){
+
+        return true;
+    }
+    else{
+
+        return false;
+    }
+}
+
+//PARTITION POINTS IN RANGE OF CENTROID TO ASSIGNED AND UNASSIGNED
+void partition_assigned_unassigned(pair<vector<int>,int>& curves_in_range){
+
+    int temp;
+    int left = 0;
+    int right = curves_in_range.first.size() - 1;
+    int partition_pointer = 0;
+
+    while(left < right){
+
+        //WHILE CURVE IN LEFT INDEX IS ALREADY ASSIGNED
+        while(already_assigned(curves_in_range.first[left])){
+            left++;
+            if(left == right){
+                curves_in_range.second = left + 1;
+                return;
+            }
+        }
+        while(!already_assigned(curves_in_range.first[right])){
+            right--;
+            if(right == left){
+                curves_in_range.second = left + 1;
+                return;
+            }
+        }
+        //SWAP THE UNASSIGNED CURVE FROM THE LEFT WITH THE ASSIGNED CURVE FROM THE RIGHT
+        temp = curves_in_range.first[left];
+        curves_in_range.first[left] = curves_in_range.first[right];
+        curves_in_range.first[right] = temp;
+        left++;
+        right--;
+
+    }
+
+    //KEEP TRACK OF THE FIRST INDEX WITH UNASSIGNED POINT
+    curves_in_range.second = left;
+}
+
+//CHECK IF A POINT IS ASSIGNED OR NOT
+bool is_assigned_get_value(int index){
+
+    return is_assigned[index];
+}
+
+//LABEL ALL THE POINTS THAT HAVE BEEN ASSIGNED TO A CLUSTER AS ASSIGNED
+void label_assigned_curves(vector<pair<vector<int>,int>>& curves_in_range){
+    //FOR ALL THE CLUSTERS
+    for(int i = 0; i < curves_in_range.size(); i++){
+        //FOR ALL THE POINTS ASSIGNED TO THEM
+        for(int j = 0; j < curves_in_range[i].first.size(); j++){
+            mark_as_assigned(curves_in_range[i].first[j]);
+            //KEEP TRACK OF THE FIRST INDEX OF EVERY CLUSTER THAT HAS NOT BEEN ASSIGNED
+            curves_in_range[i].second++;
+        }
+    }
+}
+
+//PRINT POINTS DATA REGARDING TO WHETHER THEY ARE ASSIGNED OR NOT
+//USED FOR CHECKING PURPOSES
+void assigned_print_assigned(){
+    int count = 0;
+    for(int i = 0; i < is_assigned.size(); i++){
+        if(is_assigned[i] == true){
+            cout << i+1 << " point is assigned " << endl;
+            count++;
+        }
+    }
+    cout << "number of assigned points is " << count << endl;
 }
 
 //SET NUMBER AND SIZE OF V-VECTORS
@@ -389,13 +621,13 @@ vector<double> add_vectors(const pair<pair<string, int>, vector<double>>& curve1
 }
 
 //COMPUTES THE DISTANCE BETWEEN 2 VECTORS USING THE k-NORM
-double calculate_distance(vector<double>& point1, const vector<double>& point2, int k)
+double calculate_distance(vector<double>& curve1, const vector<double>& curve2, int k)
 {
     double distance = 0.0;
     double sum = 0;
 
-    for (int i=0 ; i < point1.size() ; i++) {
-        sum+= pow(abs(point1[i]-point2[i]), k);
+    for (int i=0 ; i < curve1.size() ; i++) {
+        sum+= pow(abs(curve1[i]-curve2[i]), k);
     }
     distance = pow(sum, 1.0/(double)k);
 
@@ -418,4 +650,44 @@ float calculate_partial_sums(vector<float>& min_distances, vector<float>& partia
     }
 
     return last_partial_sum;
+}
+
+//CHECK IF A GIVEN ID ALREADY EXISTS IN ID VECTOR
+bool already_exists(vector<int>& ids, int id){
+
+    if(find(ids.begin(), ids.end(), id) != ids.end() )
+        return true;
+    else
+        return false;
+}
+
+//REMOVE POINT ID FROM ALL THE CLUSTERS OF CENTROID'S THAT DO NOT HAVE MINIMUM DISTANCE WITH IT
+void update_curves_in_range(pair<vector<int>,int>& curves_in_range, int id){
+
+    curves_in_range.first.erase(std::remove(curves_in_range.first.begin(),
+    curves_in_range.first.end(), id), curves_in_range.first.end());
+}
+
+//SEARCH IF A CURVE ID IS IN ASSIGNED TO A CENTROID - CLUSTERING
+void search_if_in_range(pair<vector<int>,int>& curves_in_range, vector<int>& centroid, int id, int num){
+    //FOR ALL THE CURVES IN RANGE THAT HAVE NOT ALREADY BEEN ASSIGNED
+    for(int i = 0; i < curves_in_range.first.size(); i++){
+        //IF GIVEN POINT ID IS ASSIGNED TO THIS CENTROID
+        if(curves_in_range.first[i] == id){
+            //ADD THE CENTROID TO CENTROIDS WITH SAME ID
+            centroid.push_back(centroids_get_centroid(num));
+
+        }
+    }
+}
+
+//UPDATE CLUSTER TABLE WITH THE IDS OF THE POINTS IN EACH CLUSTER
+void get_cluster_table(vector<pair<vector<int>,int>>& points_in_range, vector<vector<int>>& cluster_table){
+
+    cluster_table.clear();
+
+    for(int i = 0; i < points_in_range.size(); i++){
+
+        cluster_table.push_back(points_in_range[i].first);
+    }
 }

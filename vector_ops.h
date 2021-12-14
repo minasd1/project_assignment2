@@ -27,6 +27,9 @@ static vector<vector<int>> curves_ID_vector;
 //VECTOR OF CENTROID POINTS - USED IN CLUSTERING
 static vector<int> centroids;
 
+//MARKED AND NON MARKED POINTS AS ASSIGNED TO A CLUSTER - CLUSTERING
+static vector<bool> is_assigned;
+
 
 /*-------------------------CURVE VECTOR FUNCTIONS------------------------*/
 void curve_vector_insert_curve(pair<pair<string, int>, vector<double>>& curve);
@@ -47,11 +50,27 @@ void centroids_insert_curve(int id);
 int centroids_get_centroid(int index);
 int centroids_get_size();
 vector<int> centroids_get_table();
+double centroids_get_radii();
 void centroids_pick_first_centroid();
 void centroids_pick_next_centroid(vector<float>& partial_sums);
+void centroids_duplicates_assign_to_nearest_centroid(vector<pair<vector<int>,int>>& curves_in_range);
 float centroids_calculate_min_distance_curve(vector<double>& curve);
 void centroids_calculate_min_distance_input(vector<float>& curves_min_distances);
+void centroids_get_hashtable_hashes(G_Lsh g, vector<vector<int>>& hashes);
 void centroids_print_data();
+
+/*-----------------------IS ASSIGNED VECTOR FUNCTIONS-----------------------*/
+void is_assigned_initialize();
+int is_assigned_get_size();
+int is_assigned_count_assigned();
+int is_assigned_count_unassigned();
+void mark_as_assigned(int index);
+bool already_assigned(int index);
+void partition_assigned_unassigned(pair<vector<int>,int>& curves_in_range);
+bool is_assigned_get_value(int index);
+void label_assigned_curves(vector<pair<vector<int>,int>>& curves_in_range);
+void assigned_print_assigned();
+//void is_assigned_clear();
 
 /*-------------------------V_VECTOR FUNCTIONS----------------------------*/
 void v_vectors_initialization(vector<vector<int>>& v_vectors, int num_of_v_vectors, int dimensions);
@@ -71,11 +90,14 @@ Curve convert_for_continuous_frechet(const pair<pair<string, int>, vector<double
 /*--------------------OPERATIONS BETWEEN VECTORS FUNCTIONS-----------------*/
 int calculate_dot_product(const pair<pair<string, int>, vector<double>>& curve, vector <int>& d_vector);
 vector<double> add_vectors(const pair<pair<string, int>, vector<double>>& curve1, const pair<pair<string, int>, vector<double>>& curve2);
-double calculate_distance(vector<double>& point1, const vector<double>& point2, int k=2);
+double calculate_distance(vector<double>& curve1, const vector<double>& curve2, int k=2);
 
 /*-------------------------OTHER FUNCTIONS---------------------------------*/
 float calculate_partial_sums(vector<float>& min_distances, vector<float>& partial_sums);
-
+bool already_exists(vector<int>& ids, int id);
+void update_curves_in_range(pair<vector<int>,int>& curves_in_range, int id);
+void search_if_in_range(pair<vector<int>,int>& curves_in_range, vector<int>& centroid, int id, int num);
+void get_cluster_table(vector<pair<vector<int>,int>>& points_in_range, vector<vector<int>>& cluster_table);
 
 
 #endif
