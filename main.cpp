@@ -152,7 +152,7 @@ int main(int argc, char* argv[]){
     max_coordinate_value = max(max_coordinate_value, query_max_coordinate_value);
 
     //INITIALIZE G FRECHET FUNCTION THAT USES g_lsh
-    G_Frechet g_frechet(g_lsh, generator, L, delta, max_coordinate_value);
+    G_Frechet g_frechet(g_lsh, generator, L, delta, max_coordinate_value, num_of_curve_values);
 
     if(strcmp(argv[0], "./search") == 0){
 
