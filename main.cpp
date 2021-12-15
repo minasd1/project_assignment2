@@ -19,6 +19,7 @@
 #include "frechet_functions.h"
 #include "read_file_data.h"
 #include "cmd_line_args.h"
+#include "user_input.h"
 
 
 int main(int argc, char* argv[]){
@@ -50,7 +51,7 @@ int main(int argc, char* argv[]){
     
     int curves_divider = 16;        //USED TO GET TOTAL CURVES IN EACH HASHTABLE
     
-    bool is_query_curve, first_iteration, complete_flag;
+    bool is_query_curve, first_iteration, complete_flag, new_query_file;
 
     unsigned int hash_value, number_of_curves ;
  
@@ -73,6 +74,7 @@ int main(int argc, char* argv[]){
     is_query_curve = true;
     first_iteration = true;
     complete= false;
+    new_query_file = false;
 
     read_cmd_args(argc, argv, input_file_name, query_file_name, k, k_cube, L, output_file_name, 
                   N, R, M_cube, probes, config_file_name, complete_flag, algorithm, 
@@ -203,6 +205,12 @@ int main(int argc, char* argv[]){
     while(continue_execution == 1){
 
         if(strcmp(argv[0], "./search") == 0){
+
+            if(new_query_file == true){
+
+                //OPEN FILE TO READ QUERY FILES FROM
+                open_file(&query_file, query_file_name, fstream::in);
+            }
 
             //OPEN FILE TO WRITE RESULTS TO
             open_file(&output_file, output_file_name, fstream::out);
@@ -406,10 +414,10 @@ int main(int argc, char* argv[]){
             output_file << "tTrueAverage: " << sum_exact_time / (double) query_curves_counted << endl;
             output_file << "MAF: " << maf << endl;
 
+            read_user_input(query_file_name, &continue_execution);
+            new_query_file = true;
             close_file(&query_file);
             close_file(&output_file);
-
-            continue_execution = 0;//only for now
         }
     }
 
