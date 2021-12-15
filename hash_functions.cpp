@@ -46,14 +46,17 @@ void G_Lsh::id(const pair<pair<string, int>, vector<double>>& curve, vector<int>
 {
     vector<int> curve_id_values;
     int i, j, sum, h, id;
-
+    
     for (i=0; i < l ; i++) {  //FOR EVERY G FUNCTION
         sum= 0;
         for (j=0 ; j < k ; j++) { //ADD k r*h(p) PRODUCTS
+            
             h= (calculate_dot_product(curve, v_vectors[h_functions[i][j]]) + t[h_functions[i][j]])/w;
             sum+= mod(r[i][j], m) * mod(h, m);
         }
+       
         id= mod(sum, m);
+        
         //cout << "MOD (" << sum << " " << m << ")= " << id << endl; //CHECKING PURPOSE, TO BE REMOVED
         curve_id_values.push_back(id);
 
@@ -62,7 +65,7 @@ void G_Lsh::id(const pair<pair<string, int>, vector<double>>& curve, vector<int>
         	break;
 		}
     }
-
+    
     if(!is_query){
 		if (frechet_grid != 0) {
 			curves_ID_vector_insert_frechet(curve.first.second, curve_id_values[0], frechet_grid);
@@ -86,15 +89,17 @@ void G_Lsh::hash(const pair<pair<string, int>, vector<double>>& curve, vector<in
     int i;
     vector<int> curve_hash_values;
     vector<int> curve_id_values;
-
+    
     this->id(curve, curve_id_values, true, frechet_grid);
+    
     for (i=0; i< curve_id_values.size() ; i++) {
+     
         curve_hash_values.push_back(mod(curve_id_values[i], table_size));
     }
     if (!is_query && !frechet_grid){
+      
     	this->id(curve, curve_id_values, false, frechet_grid);
 		hashTable_push_back(curve_hash_values, curve.first.second);
-
     }
     else {
     	hash_vector = curve_hash_values;
@@ -175,13 +180,13 @@ void G_Hypercube::hash(const pair<pair<string, int>, vector<double>>& curve, uns
 
 
 //GENERATES VECTOR OF FLOATS USED IN GRID CURVE
-G_Frechet::G_Frechet(G_Lsh g_func, engine gen, int L_num, double delta_value, double max_value)
-    :g(g_func), generator(gen), L(L_num), delta(delta_value)
+G_Frechet::G_Frechet(G_Lsh g_func, engine gen, int L_num, double delta_value, double max_value, int num_curve_values)
+    :g(g_func), generator(gen), L(L_num), delta(delta_value), num_of_curve_values(num_curve_values)
 {
     t.resize(L, vector<float>(0));
     int num_of_grid_vertices = 0;//1
     
-    max_coordinate_value = max(max_value, (double)num_of_grid_values);
+    max_coordinate_value = max(max_value, (double)num_of_curve_values);//num_of_grid_values
 
     while(num_of_grid_vertices*delta < max_coordinate_value){
 
@@ -194,7 +199,7 @@ G_Frechet::G_Frechet(G_Lsh g_func, engine gen, int L_num, double delta_value, do
         create_vector_t(t[i], num_of_grid_vertices, delta, generator);
     }
     
-
+    // num_of_grid_values = num_of_grid_vertices;
 } 
 
 //PRODUCES A 1d VECTOR WITH DOUBLE VALUES THAT IS THE KEY FOR HASHTABLE INSERTION
@@ -203,7 +208,7 @@ G_Frechet::G_Frechet(G_Lsh g_func, engine gen, int L_num, double delta_value, do
 void G_Frechet::hash(const pair<pair<string, int>, vector<double>>& curve, vector<int>& hash_vector, vector<int>& id_vector, bool is_query, int grid_dimensions)
 {
     hash_vector.clear();
-
+   
     pair<pair<string, int>, vector<double>> snapped_curve, filtered_curve;
     vector<int> hash_values;
     double epsilon = 0.1;
@@ -220,7 +225,7 @@ void G_Frechet::hash(const pair<pair<string, int>, vector<double>>& curve, vecto
 
         filter(curve.second, filtered_curve.second, epsilon);
     }
-
+   
     //FOR EVERY HASHTABLE
     for(int i = 1; i <= L; i++){
         
@@ -237,10 +242,10 @@ void G_Frechet::hash(const pair<pair<string, int>, vector<double>>& curve, vecto
         }
         
         padding(snapped_curve.second, grid_dimensions);
-
+        
         //GET THE BUCKET THAT CURVE MUST BE INSERTED USING LSH HASHING
         g.hash(snapped_curve, hash_values, is_query, 1);       //i CAN POSSIBLY BE A  BOOLEAN FLAG
-
+        
         //IF IT'S A QUERY CURVE, GET IT'S IDS
         if(is_query == true){
             
@@ -252,7 +257,7 @@ void G_Frechet::hash(const pair<pair<string, int>, vector<double>>& curve, vecto
         snapped_curve.second.clear();
         
     }
-    
+ 
     if(!is_query){
         //INSERT CURVE'S ID TO EACH ONE OF THE L HASHTABLES INDICATED BY THE HASH_VECTOR
         hashTable_push_back(hash_vector, curve.first.second);
@@ -399,11 +404,11 @@ void G_Frechet::padding(vector<double>& snapped_curve, int grid_dimensions){
 
     //PADDING VALUE IS GREATER THAN ALL THE CURVE VERTICES VALUES TO AVOID FALSE POSITIVES
     double padding_value = max_coordinate_value + 1;
-
+   
     //IF SNAPPED CURVE HAS LESS THAN LESS THAN THE MAXIMUM VALUES
-    if(snapped_curve.size() < grid_dimensions * num_of_grid_values){
+    if(snapped_curve.size() < grid_dimensions * num_of_curve_values){
 
-        for(int i = snapped_curve.size(); i < grid_dimensions * num_of_grid_values; i++){
+        for(int i = snapped_curve.size(); i < grid_dimensions * num_of_curve_values; i++){
             //FILL WITH A VERY LARGE VALUE UNTIL MAXIMUM SIZE IS REACHED
             snapped_curve.push_back(padding_value);
         }

@@ -56,11 +56,11 @@ class G_Frechet{
         engine generator;          //THE GENERATOR OF PSEUDO RANDOM NUMBERS
         int L;                     //NUMBER OF GRID CURVES WHEN LSH IS USED
         double delta;              //SPACE BETWEEN GRID CURVE VALUES
-        int num_of_grid_values;    //MAXIMUM NUMBER OF VALUES USED IN GIRD CURVE
+        int num_of_curve_values;    //MAXIMUM NUMBER OF VALUES USED IN GIRD CURVE
         double max_coordinate_value;          //MAXIMUM VALUE THAT IS RECORDED FOR ALL COORDINATES
     
     public:
-        G_Frechet(G_Lsh g, engine gen, int L_num, double delta_value, double max_value);
+        G_Frechet(G_Lsh g, engine gen, int L_num, double delta_value, double max_value, int num_of_curve_values);
         void hash(const pair<pair<string, int>, vector<double>>& curve, vector<int>& hash_vector, vector<int>& id_vector, bool is_query, int grid_dimensions);
         void filter(const vector<double>& curve, vector<double>& filtered_curve, double epsilon);
         void snap_to_grid(const pair<pair<string, int>, vector<double>>& curve, vector<double>& snapped_curve, int grid_dimensions, int grid_num);
