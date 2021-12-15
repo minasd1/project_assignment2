@@ -202,6 +202,8 @@ G_Frechet::G_Frechet(G_Lsh g_func, engine gen, int L_num, double delta_value, do
 //CURRENT CURVE'S ID MUST BE INSERTED TO
 void G_Frechet::hash(const pair<pair<string, int>, vector<double>>& curve, vector<int>& hash_vector, vector<int>& id_vector, bool is_query, int grid_dimensions)
 {
+    hash_vector.clear();
+
     pair<pair<string, int>, vector<double>> snapped_curve, filtered_curve;
     vector<int> hash_values;
     double epsilon = 0.1;
@@ -237,12 +239,12 @@ void G_Frechet::hash(const pair<pair<string, int>, vector<double>>& curve, vecto
         padding(snapped_curve.second, grid_dimensions);
 
         //GET THE BUCKET THAT CURVE MUST BE INSERTED USING LSH HASHING
-        g.hash(snapped_curve, hash_values, is_query, i);       //i CAN POSSIBLY BE A  BOOLEAN FLAG
+        g.hash(snapped_curve, hash_values, is_query, 1);       //i CAN POSSIBLY BE A  BOOLEAN FLAG
 
         //IF IT'S A QUERY CURVE, GET IT'S IDS
         if(is_query == true){
             
-            g.id(snapped_curve, id_vector, 1, 1);
+            g.id(snapped_curve, id_vector, is_query, 1);
         }
         
         //AND ADD IT TO CURVE'S HASH VALUES
@@ -257,7 +259,7 @@ void G_Frechet::hash(const pair<pair<string, int>, vector<double>>& curve, vecto
 
     }
     
-    hash_vector.clear();
+    // hash_vector.clear();
     
 }
 

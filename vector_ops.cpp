@@ -268,7 +268,8 @@ void centroids_duplicates_assign_to_nearest_centroid(vector<pair<vector<int>,int
 
 }
 
-float centroids_calculate_min_distance_curve(vector<double>& curve){
+//CALCULATE MIN DISTANCE OF A CURVE FROM ALL THE CENTROIDS
+float centroids_calculate_min_distance_curve(vector<double>& curve, string assignment){
 
     float min_distance = numeric_limits<float>::max();
     float current_distance;
@@ -276,8 +277,16 @@ float centroids_calculate_min_distance_curve(vector<double>& curve){
 
     for(int i = 0; i < centroids_get_size(); i++){
 
-        //INITIAL CENTROIDS ARE POINTS FROM INPUT
-        current_distance = calculate_distance(curve_vector[centroids[i]].second, curve);
+        if(assignment == "LSH" || assignment == "Hypercube"){
+
+            //CALCULATE EUCLIDEAN DISTANCE
+            current_distance = calculate_distance(curve_vector[centroids[i]].second, curve);
+        }
+        else if(assignment == "LSH_Frechet"){
+
+            //CALCULATE DISCRETE FRECHET DISTANCE
+            current_distance = curve_calculate_dfd(curve_vector[centroids[i]].second, curve);
+        }
 
         if(current_distance < min_distance){
 
@@ -291,14 +300,14 @@ float centroids_calculate_min_distance_curve(vector<double>& curve){
     return min_distance;
 }
 
-
-void centroids_calculate_min_distance_input(vector<float>& curves_min_distances){
+//CALCULATE MIN DISTANCE OF EACH INPUT CURVE FROM ALL THE CENTROIDS
+void centroids_calculate_min_distance_input(vector<float>& curves_min_distances, string assignment){
 
     float curve_min_distance;
 
     for(int i = 0; i < curve_vector.size(); i++){
 
-        curve_min_distance = centroids_calculate_min_distance_curve(curve_vector[i].second);
+        curve_min_distance = centroids_calculate_min_distance_curve(curve_vector[i].second, assignment);
 
         //IF CURRENT CURVE IS NOT A CENTROID
         if(curve_min_distance != 0){
@@ -308,8 +317,23 @@ void centroids_calculate_min_distance_input(vector<float>& curves_min_distances)
     }
 }
 
-//GET EVERY CENTROID'S HASHTABLE BUCKET HASHES
-void centroids_get_hashtable_hashes(G_Lsh g, vector<vector<int>>& hashes){
+//GET EVERY CENTROID'S HASHTABLE BUCKET HASHES - USING FRECHET HASHING
+void centroids_get_hashtable_hashes_frechet(G_Frechet g, vector<vector<int>>& hashes){
+
+    vector<int> hash_vector;
+    vector<int> id_vector;
+
+    for(int i = 0; i < centroids.size(); i++){
+       
+        g.hash(curve_vector_get_curve(centroids[i]), hash_vector, id_vector, true, 2);
+        hashes.push_back(hash_vector);
+
+        hash_vector.clear();
+    }
+}
+
+//GET EVERY CENTROID'S HASHTABLE BUCKET HASHES - USING LSH HASHING
+void centroids_get_hashtable_hashes_lsh(G_Lsh g, vector<vector<int>>& hashes){
 
     vector<int> hash_vector;
 
@@ -542,10 +566,11 @@ void print_vector_t(vector<float>& t){
 }
 
 //CALCULATE DISCRETE FRECHET DISTANCE BETWEEN TWO CURVES
-double curve_calculate_dfd(const pair<pair<string, int>, vector<double>>& curve1, const pair<pair<string, int>, vector<double>>& curve2){
+double curve_calculate_dfd(const vector<double>& curve1, const vector<double>& curve2){
+
     vector<vector<double>> DFD;     //ARRAY THAT KEEPS DISCRETE FRECHET DISTANCE FOR EVERY POSSIBLE TRAVERSAL
     vector<double> point1, point2;  //CURVE POINTS
-    int num_of_points = curve1.second.size();
+    int num_of_points = curve1.size();
 
     DFD.resize(num_of_points, vector<double>(num_of_points));
     
@@ -553,13 +578,13 @@ double curve_calculate_dfd(const pair<pair<string, int>, vector<double>>& curve1
     for(int i = 0; i < num_of_points; i++){
         //PAIR THEIR X AND Y VALUES
         point1.push_back(i);
-        point1.push_back(curve1.second[i]);
+        point1.push_back(curve1[i]);
 
         //FOR ALL THE VERTICES IN CURVE 2
         for(int j = 0; j < num_of_points; j++){
             //DO THE SAME
             point2.push_back(j);
-            point2.push_back(curve2.second[j]);
+            point2.push_back(curve2[j]);
 
             if(i == 0 && j == 0){   //FIRST ELEMENT OF THE ARRAY
                 DFD[i][j] = calculate_distance(point1, point2);

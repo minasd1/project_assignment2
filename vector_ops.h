@@ -54,9 +54,10 @@ double centroids_get_radii();
 void centroids_pick_first_centroid();
 void centroids_pick_next_centroid(vector<float>& partial_sums);
 void centroids_duplicates_assign_to_nearest_centroid(vector<pair<vector<int>,int>>& curves_in_range);
-float centroids_calculate_min_distance_curve(vector<double>& curve);
-void centroids_calculate_min_distance_input(vector<float>& curves_min_distances);
-void centroids_get_hashtable_hashes(G_Lsh g, vector<vector<int>>& hashes);
+float centroids_calculate_min_distance_curve(vector<double>& curve, string assignment);
+void centroids_calculate_min_distance_input(vector<float>& curves_min_distances, string assignment);
+void centroids_get_hashtable_hashes_frechet(G_Frechet g, vector<vector<int>>& hashes);
+void centroids_get_hashtable_hashes_lsh(G_Lsh g, vector<vector<int>>& hashes);
 void centroids_get_hypercube_hashes(G_Hypercube g, vector<int>& hashes);
 void centroids_print_data();
 
@@ -85,7 +86,7 @@ void print_vector_t(vector<float>& t);
 void create_vector_int(vector<int>& ints, int k, int w, std::default_random_engine& generator);
 
 /*--------------------OPERATIONS BETWEEN CURVES FUNCTIONS-----------------*/
-double curve_calculate_dfd(const pair<pair<string, int>, vector<double>>& curve1, const pair<pair<string, int>, vector<double>>& curve2);
+double curve_calculate_dfd(const vector<double>& curve1, const vector<double>& curve2);
 Curve convert_for_continuous_frechet(const pair<pair<string, int>, vector<double>>& curve, const unsigned long dimensions);
 
 /*--------------------OPERATIONS BETWEEN VECTORS FUNCTIONS-----------------*/

@@ -56,7 +56,7 @@ vector<dist_id_pair> frechet_find_approximate_knn(pair<pair<string, int>, vector
 
         if(metric == "discrete"){
             //CALCULATE DISCRETE FRECHET DISTANCE
-            distance= curve_calculate_dfd(query_curve, current_candidate);
+            distance= curve_calculate_dfd(query_curve.second, current_candidate.second);
         }
         else if(metric == "continuous"){
             //CONVERT CANDIDATE CURVE TO PROPER FORM FOR CONTINUOUS FRECHET CALCULATIONS
@@ -107,7 +107,7 @@ vector<dist_id_pair> frechet_find_approximate_knn(pair<pair<string, int>, vector
             current_candidate= curve_vector_get_curve(candidate_curves[i+1]);//+1 BECAUSE candidate_points IS [HASHTABLE, POINT_INDEX, HASHTABLE, ...]
             if(metric == "discrete"){
                 //CALCULATE DISCRETE FRECHET DISTANCE
-                distance= curve_calculate_dfd(query_curve, current_candidate);
+                distance= curve_calculate_dfd(query_curve.second, current_candidate.second);
             }
             else if(metric == "continuous"){
                 //CONVERT CANDIDATE CURVE TO PROPER FORM FOR CONTINUOUS FRECHET CALCULATIONS
@@ -169,7 +169,7 @@ vector<dist_id_pair> frechet_find_exact_knn(pair<pair<string, int>, vector<doubl
         current_candidate= curve_vector_get_curve(i);
         if(metric == "discrete"){
             //CALCULATE DISCRETE FRECHET DISTANCE
-            distance= curve_calculate_dfd(query_curve, current_candidate);
+            distance= curve_calculate_dfd(query_curve.second, current_candidate.second);
         }
         else if(metric == "continuous"){
             //CONVERT CANDIDATE CURVE TO PROPER FORM FOR CONTINUOUS FRECHET CALCULATIONS
@@ -209,4 +209,40 @@ vector<dist_id_pair> frechet_find_exact_knn(pair<pair<string, int>, vector<doubl
     }
 
     return nn_table;
+}
+
+vector<int> frechet_range_search(vector<int>& g, int radius, pair<pair<string, int>, vector<double>>& query_curve){
+    
+    int retrieved_items = 0;
+    int count = 0;
+    int max_retrieved_items = 20* hashTable_get_num_of_htables();
+
+    vector<int> curves_in_range;
+
+    //ACCESS TO I-TH HASHTABLE
+    for(int i = 0; i < hashTable_get_num_of_htables(); i++){
+        
+        //ACCESS TO THE SPECIFIC BUCKET THAT I-TH G FUNCTION INDICATES
+        for(int j = 0; j < hashTable_get_bucket_size(i, g[i]); j++){
+            //IF INPUT POINT IS NOT THE SAME AS THE QUERY POINT AND DOES NOT ALREADY EXIST IN POINTS IN RANGE
+            if((query_curve.first.second != hashTable_get_curve(i, g[i], j))
+        && (!already_exists(curves_in_range, hashTable_get_curve(i, g[i], j))) 
+        && (!already_assigned(hashTable_get_curve(i, g[i], j)))){   //ALSO CHECK THAT IT IS NOT ASSIGNED ALREADY - CLUSTERING
+                //IF DISTANCE OF J-TH POINT IN THIS BUCKET IS IN THE GIVEN RADIUS
+                if((curve_calculate_dfd(query_curve.second, curve_vector_get_curve(hashTable_get_curve(i, g[i], j)).second)) < radius){
+                    //THEN ADD IT'S ID TO POINTS_IN_RANGE VECTOR
+                    curves_in_range.push_back(hashTable_get_curve(i, g[i], j));
+                    retrieved_items++;
+
+                    if(retrieved_items == max_retrieved_items){
+
+                        return curves_in_range;
+                    }
+                }
+                
+            }
+        }
+    }
+    
+    return curves_in_range;
 }
