@@ -565,7 +565,7 @@ void print_vector_t(vector<float>& t){
     cout << endl;
 }
 
-vector<vector<double>> get_dfd_array(vector<double>& curve1, vector<double>& curve2){
+vector<vector<double>> get_dfd_array(const vector<double>& curve1, const vector<double>& curve2){
     vector<vector<double>> DFD;     //ARRAY THAT KEEPS DISCRETE FRECHET DISTANCE FOR EVERY POSSIBLE TRAVERSAL
     vector<double> point1, point2;  //CURVE POINTS
     int num_of_points = curve1.size();
@@ -669,7 +669,7 @@ Curve convert_for_continuous_frechet(const pair<pair<string, int>, vector<double
 }
 
 //FIND OPTIMAL TRAVERSAL BETWEEN TWO CURVES
-vector<pair<int,int>> find_optimal_traversal(vector<double>& curve1, vector<double>& curve2){
+vector<pair<int,int>> find_optimal_traversal(const vector<double>& curve1, const vector<double>& curve2){
 
     vector<vector<double>> DFD = get_dfd_array(curve1, curve2);
 
@@ -683,13 +683,14 @@ vector<pair<int,int>> find_optimal_traversal(vector<double>& curve1, vector<doub
 
     optimal_traversal.push_back(last_step);
 
-    while(i >= 0 && j >= 0){
-
+    while(i > 0 && j > 0){
+        
         neighbor_cells.push_back(DFD[i-1][j]);
         neighbor_cells.push_back(DFD[i][j-1]);
         neighbor_cells.push_back(DFD[i-1][j-1]);
 
         min_index = std::min_element(neighbor_cells.begin(), neighbor_cells.end()) - neighbor_cells.begin();
+        
         if(min_index == 0){
             optimal_traversal.push_back(make_pair(--i, j));
         }
@@ -703,22 +704,43 @@ vector<pair<int,int>> find_optimal_traversal(vector<double>& curve1, vector<doub
         neighbor_cells.clear();
 
     }
-
-    if(i == 0 && j >= 0){
-
-        while(j != 0){
+    
+    if(i == 0 && j > 0){
+        
+        while(j > 0){
             optimal_traversal.push_back(make_pair(i, --j));
         }
         
     }
-    else if(i >= 0 && j == 0){
-
-        while(i >= 0){
+    else if(i > 0 && j == 0){
+        
+        while(i > 0){
            optimal_traversal.push_back(make_pair(--i, j)); 
         }
     }
 
     return optimal_traversal;
+}
+
+//GET MEAN CURVE BETWEEN TWO CURVES
+pair<pair<string, int>, vector<double>> get_mean_curve(const vector<double>& curve1, const vector<double>& curve2){
+
+    pair<pair<string, int>, vector<double>> mean_curve;
+    double mean_value;
+    int count = 0;
+
+    vector<pair<int,int>> optimal_traversal = find_optimal_traversal(curve1, curve2);
+    mean_curve.second.resize(optimal_traversal.size());
+    
+    for(int i = optimal_traversal.size()-1; i >=0; i--){
+
+        mean_value = (curve1[optimal_traversal[i].first] + curve2[optimal_traversal[i].second])/2;
+        mean_curve.second[count] = mean_value;
+
+        count++;
+    }
+
+    return mean_curve;
 }
 
 //CALCULATE DOT PRODUCT OF TWO VECTORS
