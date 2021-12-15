@@ -86,8 +86,10 @@ void print_vector_t(vector<float>& t);
 void create_vector_int(vector<int>& ints, int k, int w, std::default_random_engine& generator);
 
 /*--------------------OPERATIONS BETWEEN CURVES FUNCTIONS-----------------*/
+vector<vector<double>> get_dfd_array(vector<double>& curve1, vector<double>& curve2);
 double curve_calculate_dfd(const vector<double>& curve1, const vector<double>& curve2);
 Curve convert_for_continuous_frechet(const pair<pair<string, int>, vector<double>>& curve, const unsigned long dimensions);
+vector<pair<int,int>> find_optimal_traversal(vector<double>& curve1, vector<double>& curve2);
 
 /*--------------------OPERATIONS BETWEEN VECTORS FUNCTIONS-----------------*/
 int calculate_dot_product(const pair<pair<string, int>, vector<double>>& curve, vector <int>& d_vector);
