@@ -21,6 +21,7 @@
 #include "cmd_line_args.h"
 #include "user_input.h"
 #include "cluster.h"
+#include "conf_file.h"
 
 
 int main(int argc, char* argv[]){
@@ -132,6 +133,14 @@ int main(int argc, char* argv[]){
         first_iteration = false;
 
         count++;
+    }
+
+    //MARK ALL THE INPUT POINTS AS UNASSIGNED
+    is_assigned_initialize();
+
+    if(strcmp(argv[0], "./cluster") == 0){
+
+        read_configuration_file(config_file, config_file_name, k_cluster, L, k, M_cube, k_cube, probes);
     }
 
     max_coordinate_value = max(max_value, (double)num_of_curve_values);
