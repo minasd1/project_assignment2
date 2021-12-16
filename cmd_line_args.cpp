@@ -7,13 +7,13 @@ using namespace std;
 //Initializes program's variables with command line arguments
 int read_cmd_args(int argc, char** argv, string& input_file, string& query_file,
                       int& k_lsh, int& k_cube, int& l, string& output_file, int& n,
-                      float& r, int& m, int& probes, string& config_file, 
-                      bool& complete_flag, string& algorithm, string& metric, double& delta)
+                      float& r, int& m, int& probes, string& config_file, string& assignment,
+                      bool& complete_flag, string& algorithm, string& metric, double& delta, string& update)
 {
     int i;
     bool input_file_flag, k_lsh_flag, k_cube_flag, l_flag, output_file_flag, query_file_flag, 
          n_flag, r_flag, probes_flag, algorithm_flag, metric_flag, delta_flag, m_flag, c_flag, 
-         method_flag;
+         method_flag, assignment_flag, update_flag;
 
     //Flags for given arguments (false for missing args)
     input_file_flag= false;
@@ -27,11 +27,13 @@ int read_cmd_args(int argc, char** argv, string& input_file, string& query_file,
     probes_flag= false;
     m_flag= false;
     c_flag= false;
-    method_flag= false;
+    assignment_flag= false;
     complete_flag= false;
     algorithm_flag= false;
     metric_flag= false;
     delta_flag= false;
+    update_flag= false;
+
 
     for (i=1; i < argc ; i+=2) { //For every other argument
         if((string)argv[i] == "-i"){
@@ -84,35 +86,45 @@ int read_cmd_args(int argc, char** argv, string& input_file, string& query_file,
             delta_flag= true;
             delta= stod(argv[i+1]);
         }
-        /*else if ((string)argv[i] == "-c" && (string)argv[0] == "./cluster") {
+        else if ((string)argv[i] == "-c") {
             c_flag= true;
             config_file= argv[i+1];
         }
-        else if ((string)argv[i] == "-complete" && (string)argv[0] == "./cluster") {
+        else if ((string)argv[i] == "-complete") {
             complete_flag= true;
         }
-        else if ((string)argv[i] == "-m" && (string)argv[0] == "./cluster") {
+        else if ((string)argv[i] == "-assignment") {
             if ((string)argv[i+1] == "Classic" || (string)argv[i+1] == "classic"
                 || (string)argv[i+1] == "CLASSIC"){
-                    method_flag= true;
-                    method= "classic";
+                    assignment_flag= true;
+                    assignment= "Classic";
             }
             else if ((string)argv[i+1] == "Lsh" || (string)argv[i+1] == "lsh"
                 || (string)argv[i+1] == "LSH") {
-                    method_flag= true;
-                    method= "lsh";
+                    assignment_flag= true;
+                    assignment= "LSH";
             }
             else if ((string)argv[i+1] == "Hypercube" || (string)argv[i+1] == "hypercube"
                 || (string)argv[i+1] == "HYPERCUBE") {
-                    method_flag= true;
-                    method= "hypercube";
+                    assignment_flag= true;
+                    assignment= "Hypercube";
+            }
+            else if ((string)argv[i+1] == "LSH_Frechet" || (string)argv[i+1] == "lsh_frechet"
+                || (string)argv[i+1] == "Lsh_Frechet"   || (string)argv[i+1] == "Lsh_frechet"
+                || (string)argv[i+1] == "lsh_Frechet"   || (string)argv[i+1] == "LSH_FRECHET") {
+                    assignment_flag= true;
+                    assignment= "LSH_Frechet";
             }
             else {
-                cerr << "Unknown method \"" << argv[i+1] << "\". " << "Please run the program with one of the acceptable methods:" << endl;
-                cerr << "(Classic, Lsh, Hypercube)" << endl;
+                cerr << "Unknown assignment method \"" << argv[i+1] << "\". " << "Please run the program with one of the acceptable methods:" << endl;
+                cerr << "(Classic, LSH, Hypercube, LSH_Frechet)" << endl;
                 return -1;
             }
-        }*/
+        }
+        else if((string)argv[i] == "-update") {
+            update_flag= true;
+            update= argv[i+1];
+        }
         else {
             cerr << "Wrong input arguent: " << argv[i] << endl;
             return -1;
@@ -121,6 +133,15 @@ int read_cmd_args(int argc, char** argv, string& input_file, string& query_file,
 
     if (!algorithm_flag && (string)argv[0] == "./search") {
         cerr << "Algorithm not defined!" << endl;
+        return -1;
+    }
+    if (!assignment_flag && (string)argv[0] == "./cluster"){
+        cerr << "Assignment method not defined!" << endl;
+        return -1;
+    }
+    if (!update_flag && (string)argv[0] == "./cluster"){
+        cerr << "Update method not defined!" << endl;
+        return -1;
     }
     
     if ((string)argv[0] == "search") {
@@ -136,9 +157,9 @@ int read_cmd_args(int argc, char** argv, string& input_file, string& query_file,
                 n= 1;
             if(!r_flag)
                 r= 10000.0;
-            if (!m_flag && (string)argv[0]=="./cube")
+            if (!m_flag )
                 m= 10;
-            if (!probes_flag && (string)argv[0]=="./cube")
+            if (!probes_flag )
                 probes= 2;
             if (!output_file_flag)
                 output_file= "output_file";
