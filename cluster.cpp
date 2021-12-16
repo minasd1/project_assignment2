@@ -32,7 +32,7 @@ void reverse_assignment_lsh(G_Lsh g, fstream& output_file, int k, string assignm
     vector<vector<int>> hashes;          //INDEXES THAT LEAD CENTROIDS TO HASHTABLE BUCKETS
     vector<int> current_point;
     int radius; 
-    int last_id = curve_vector_get_size();
+    int last_id = curve_vector_get_size()-1;
     bool first_iteration = true;
     int new_curves_assigned = 0;
     int previous_curves_assigned = 0;
@@ -113,17 +113,6 @@ void reverse_assignment_lsh(G_Lsh g, fstream& output_file, int k, string assignm
     //WHEN THE CLUSTERS HAVE BEEN DEFINITIVELY FORMED STOP COUNTING TIME
     auto stop_time = std::chrono::high_resolution_clock::now();
 
-    for(int i = 0; i < curves_in_range.size(); i++){
-       cout << "Cluster " << i << ":" << endl;
-       cout << "cluster size is " << curves_in_range[i].first.size() << endl;
-       for(int j = 0; j < curves_in_range[i].first.size(); j++){
-           cout << curves_in_range[i].first[j] << " ";
-       }
-       cout << endl;
-       cout << "pointer of unassigned is " << curves_in_range[i].second << endl;
-    }
-    cout << "number of assigned curves is " << is_assigned_count_assigned() << endl;
-
 }
 
 void reverse_assignment_cube(G_Hypercube g, fstream& output_file, int k, int probes, string assignment, bool complete_flag){
@@ -135,7 +124,7 @@ void reverse_assignment_cube(G_Hypercube g, fstream& output_file, int k, int pro
     vector<int> hashes;          //INDEXES THAT LEAD CENTROIDS TO HASHTABLE BUCKETS
     vector<int> current_point;
     int radius; 
-    int last_id = curve_vector_get_size();
+    int last_id = curve_vector_get_size()-1;
     bool first_iteration = true;
     int new_curves_assigned = 0;
     int previous_curves_assigned = 0;
@@ -224,7 +213,7 @@ void reverse_assignment_frechet(G_Frechet g, fstream& output_file, int k, string
     vector<vector<int>> hashes;          //INDEXES THAT LEAD CENTROIDS TO HASHTABLE BUCKETS
     vector<int> current_point;
     int radius; 
-    int last_id = curve_vector_get_size();
+    int last_id = curve_vector_get_size()-1;
     bool first_iteration = true;
     int new_curves_assigned = 0;
     int previous_curves_assigned = 0;

@@ -159,14 +159,13 @@ int main(int argc, char* argv[]){
     if(strcmp(argv[0], "./search") == 0){
 
         query_max_coordinate_value = file_get_max_value(query_file, query_file_name); 
+        max_coordinate_value = max(max_coordinate_value, query_max_coordinate_value);
     }
-    
-    max_coordinate_value = max(max_coordinate_value, query_max_coordinate_value);
 
     //INITIALIZE G FRECHET FUNCTION THAT USES g_lsh
     G_Frechet g_frechet(g_lsh, generator, L, delta, max_coordinate_value, num_of_curve_values);
 
-    if(strcmp(argv[0], "./search") == 0){
+    if(strcmp(argv[0], "./search") == 0 || strcmp(argv[0], "./cluster") == 0){
 
         //INITIALIZE L HASHTABLES WITH HASHTABLESIZE BUCKETS AND ZERO POINTS IN EACH BUCKET
         hashTable_initialization(L, buckets);
@@ -189,7 +188,7 @@ int main(int argc, char* argv[]){
             
             hash_vector.clear();
         }
-        else if (algorithm == "LSH") {
+        else if (algorithm == "LSH" || assignment == "LSH") {
             //INSERT ALL INPUT CURVES TO THE HASHTABLES
             for(int i = 0; i < number_of_curves; i++){
 
@@ -427,6 +426,16 @@ int main(int argc, char* argv[]){
             read_user_input(query_file_name, &continue_execution);
             new_query_file = true;
             close_file(&query_file);
+            close_file(&output_file);
+        }
+        else if(strcmp(argv[0], "./cluster") == 0){
+            
+            //OPEN FILE TO WRITE RESULTS TO
+            open_file(&output_file, output_file_name, fstream::out);
+
+            reverse_assignment_lsh(g_lsh, output_file, k_cluster, assignment, false);
+
+            continue_execution = 0;
             close_file(&output_file);
         }
     }
