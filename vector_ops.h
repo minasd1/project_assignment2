@@ -59,6 +59,7 @@ void centroids_calculate_min_distance_input(vector<float>& curves_min_distances,
 void centroids_get_hashtable_hashes_frechet(G_Frechet g, vector<vector<int>>& hashes);
 void centroids_get_hashtable_hashes_lsh(G_Lsh g, vector<vector<int>>& hashes);
 void centroids_get_hypercube_hashes(G_Hypercube g, vector<int>& hashes);
+void centroids_clear();
 void centroids_print_data();
 
 /*-----------------------IS ASSIGNED VECTOR FUNCTIONS-----------------------*/
@@ -91,10 +92,11 @@ double curve_calculate_dfd(const vector<double>& curve1, const vector<double>& c
 Curve convert_for_continuous_frechet(const pair<pair<string, int>, vector<double>>& curve, const unsigned long dimensions);
 vector<pair<int,int>> find_optimal_traversal(const vector<double>& curve1, const vector<double>& curve2);
 pair<pair<string, int>, vector<double>> get_mean_curve(const vector<double>& curve1, const vector<double>& curve2);
+pair<pair<string, int>, vector<double>> get_mean_curve_vector(vector<double> vector_of_sums, int num_of_vectors, int& last_known_id);
 
 /*--------------------OPERATIONS BETWEEN VECTORS FUNCTIONS-----------------*/
 int calculate_dot_product(const pair<pair<string, int>, vector<double>>& curve, vector <int>& d_vector);
-vector<double> add_vectors(const pair<pair<string, int>, vector<double>>& curve1, const pair<pair<string, int>, vector<double>>& curve2);
+vector<double> add_vectors(const vector<double>& curve1, const vector<double>& curve2);
 double calculate_distance(vector<double>& curve1, const vector<double>& curve2, int k=2);
 
 /*-------------------------OTHER FUNCTIONS---------------------------------*/
@@ -103,6 +105,6 @@ bool already_exists(vector<int>& ids, int id);
 void update_curves_in_range(pair<vector<int>,int>& curves_in_range, int id);
 void search_if_in_range(pair<vector<int>,int>& curves_in_range, vector<int>& centroid, int id, int num);
 void get_cluster_table(vector<pair<vector<int>,int>>& points_in_range, vector<vector<int>>& cluster_table);
-
+bool non_zero_coordinates(vector<double>& coordinates);
 
 #endif

@@ -103,12 +103,26 @@ void reverse_assignment_lsh(G_Lsh g, fstream& output_file, int k, string assignm
 
         previous_curves_assigned = new_curves_assigned;
 
+        //UPDATE THE CENTROIDS
+        update_as_vector(cluster_table, last_id);
+
         first_iteration = false;
 
     }while(1);
 
     //WHEN THE CLUSTERS HAVE BEEN DEFINITIVELY FORMED STOP COUNTING TIME
     auto stop_time = std::chrono::high_resolution_clock::now();
+
+    for(int i = 0; i < curves_in_range.size(); i++){
+       cout << "Cluster " << i << ":" << endl;
+       cout << "cluster size is " << curves_in_range[i].first.size() << endl;
+       for(int j = 0; j < curves_in_range[i].first.size(); j++){
+           cout << curves_in_range[i].first[j] << " ";
+       }
+       cout << endl;
+       cout << "pointer of unassigned is " << curves_in_range[i].second << endl;
+    }
+    cout << "number of assigned curves is " << is_assigned_count_assigned() << endl;
 
 }
 
@@ -291,4 +305,41 @@ void reverse_assignment_frechet(G_Frechet g, fstream& output_file, int k, string
     //WHEN THE CLUSTERS HAVE BEEN DEFINITIVELY FORMED STOP COUNTING TIME
     auto stop_time = std::chrono::high_resolution_clock::now();
 
+}
+
+//RECEIVES A TABLE OF THE CLUSTERS. EACH ROW CORRESPENDS TO A CLUSTER
+//IN EACH ROW ARE STORED THE IDS OF THE INPUT CURVES THAT BELONG TO THAT CLUSTER
+//RETURNS A TABLE WITH EACH CLUSTER'S NEW CENTROID
+void update_as_vector(vector<vector<int>>& cluster_table, int& last_known_id){
+
+    int row, column;  //ITERATORS
+    int dimensions; //THE NUMBER OF COORDINATES AN INPUT CURVE HAS
+    vector<double> coordinates_sum;  //A TABLE OF THE SUMS OF THE 1ST, 2ND, ..., NTH COORDINATE OF THE CURVES IN THE SAME CLUSTER
+    pair<pair<string, int>, vector<double>> current_curve, mean_curve;
+    vector<int> centroids_cp;
+
+    dimensions = curve_vector_get_curve(1).second.size();
+    centroids_cp = centroids_get_table();
+    centroids_clear();
+
+    for (row=0 ; row < cluster_table.size() ; row++) { //FOR EACH CLUSTER
+        coordinates_sum.assign(dimensions, 0); //INITIALIZE ALL SUMS (ONE SUM FOR EACH COORDINATE) WITH 0
+        for (column=0 ; column < cluster_table[row].size(); column++) { //FOR EVERY POINT IN THE CLUSTER
+            current_curve= curve_vector_get_curve((cluster_table[row][column]));
+            coordinates_sum= add_vectors(current_curve.second, coordinates_sum);
+        }
+        if(non_zero_coordinates(coordinates_sum)){
+            //mean_vector.push_back(++last_known_id);
+            mean_curve= get_mean_curve_vector(coordinates_sum, cluster_table[row].size(),last_known_id);
+            curve_vector_insert_curve(mean_curve);
+            //centroids_ids.push_back(mean_vector[0]);
+            centroids_insert_curve(mean_curve.first.second);
+        }
+        else{
+
+            centroids_insert_curve(centroids_cp[row]);
+        }
+
+    }
+    
 }

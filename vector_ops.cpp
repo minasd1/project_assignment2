@@ -277,7 +277,7 @@ float centroids_calculate_min_distance_curve(vector<double>& curve, string assig
 
     for(int i = 0; i < centroids_get_size(); i++){
 
-        if(assignment == "LSH" || assignment == "Hypercube"){
+        if(assignment == "LSH" || assignment == "Hypercube" || assignment == "Classic"){
 
             //CALCULATE EUCLIDEAN DISTANCE
             current_distance = calculate_distance(curve_vector[centroids[i]].second, curve);
@@ -352,6 +352,12 @@ void centroids_get_hypercube_hashes(G_Hypercube g, vector<int>& hashes){
         g.hash(curve_vector_get_curve(centroids[i]), hash_value, 1);
         hashes.push_back(hash_value);
     }
+}
+
+//CLEAR CENTROIDS DATA STRUCTURE
+void centroids_clear(){
+
+    centroids.clear();
 }
 
 //PRINT CENTROIDS IDS - USED FOR CHECKING PURPOSES
@@ -743,6 +749,21 @@ pair<pair<string, int>, vector<double>> get_mean_curve(const vector<double>& cur
     return mean_curve;
 }
 
+//GET MEAN CURVE BETWEEN TWO CURVES AS A VECTOR
+pair<pair<string, int>, vector<double>> get_mean_curve_vector(vector<double> vector_of_sums, int num_of_vectors, int& last_known_id){
+
+    double mean_value;
+    pair<pair<string, int>, vector<double>> mean_curve;
+
+    mean_curve.first.second = ++last_known_id;
+    for(int i = 0; i < vector_of_sums.size(); i++){
+        mean_value = vector_of_sums[i]/num_of_vectors;
+        mean_curve.second.push_back(mean_value);
+    }
+
+    return mean_curve;
+}
+
 //CALCULATE DOT PRODUCT OF TWO VECTORS
 int calculate_dot_product(const pair<pair<string, int>, vector<double>>& curve, vector <int>& d_vector){
     double product = 0.0;
@@ -754,19 +775,19 @@ int calculate_dot_product(const pair<pair<string, int>, vector<double>>& curve, 
 
 //CALCULATES THE ADDITION OF TWO DOUBLE VECTORS OF THE SAME SIZE
 //EG. v1= [0.0, 2.0, 4.0, 8.0]  v2= [0.0, 1.0, -1.0, -5.0]  v1+v2= v3= [0.0, 3.0, 3.0, 3.0]
-vector<double> add_vectors(const pair<pair<string, int>, vector<double>>& curve1, const pair<pair<string, int>, vector<double>>& curve2)
+vector<double> add_vectors(const vector<double>& curve1, const vector<double>& curve2)
 {
     int i;
     vector<double> sum_curve;
 
-    if (curve1.second.size() != curve2.second.size()) {
+    if (curve1.size() != curve2.size()) {
         cerr << "Error in add_vectors: Can not add vectors of different size" << endl;
-        sum_curve.assign(curve1.second.size(), -666);
+        sum_curve.assign(curve1.size(), -666);
     }
     else {
-        sum_curve.assign(curve1.second.size(), 0);
-        for (i=0 ; i < curve1.second.size(); i++) {
-            sum_curve[i]= curve1.second[i] + curve2.second[i];
+        sum_curve.assign(curve1.size(), 0);
+        for (i=0 ; i < curve1.size(); i++) {
+            sum_curve[i]= curve1[i] + curve2[i];
         }
     }
     return sum_curve;
@@ -842,4 +863,16 @@ void get_cluster_table(vector<pair<vector<int>,int>>& points_in_range, vector<ve
 
         cluster_table.push_back(points_in_range[i].first);
     }
+}
+
+//CHECK IF A VECTOR HAS NON ZERO COORDINATES OR NOT
+bool non_zero_coordinates(vector<double>& coordinates){
+
+    for(int i = 0; i < coordinates.size(); i++){
+        if(coordinates[i] != 0){
+            return true;
+        }
+    }
+
+    return false;
 }

@@ -20,6 +20,7 @@
 #include "read_file_data.h"
 #include "cmd_line_args.h"
 #include "user_input.h"
+#include "cluster.h"
 
 
 int main(int argc, char* argv[]){
@@ -42,7 +43,7 @@ int main(int argc, char* argv[]){
     fstream config_file;            //CLUSTER CONFIGURATION FILE
     fstream output_file;            //FILE TO WRITE OUTPUT TO
     
-    string line, token, algorithm, metric, name;
+    string line, token, algorithm, metric, name, assignment, update;
     string input_file_name, query_file_name, output_file_name, config_file_name;
    
     int start, finish, buckets, id, count, M, num_of_curve_values, 
@@ -77,8 +78,8 @@ int main(int argc, char* argv[]){
     new_query_file = false;
 
     read_cmd_args(argc, argv, input_file_name, query_file_name, k, k_cube, L, output_file_name, 
-                  N, R, M_cube, probes, config_file_name, complete_flag, algorithm, 
-                  metric, delta);
+                  N, R, M_cube, probes, config_file_name, assignment, complete_flag, algorithm, 
+                  metric, delta, update);
 
     unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
     default_random_engine generator(seed);
