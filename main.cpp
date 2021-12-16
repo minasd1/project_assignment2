@@ -24,6 +24,7 @@
 #include "conf_file.h"
 
 
+
 int main(int argc, char* argv[]){
 
     int k = 4;                      //NUMBER OF H FUNCTIONS USED IN FUNCTION G
@@ -432,7 +433,16 @@ int main(int argc, char* argv[]){
             
             //OPEN FILE TO WRITE RESULTS TO
             open_file(&output_file, output_file_name, fstream::out);
-
+            if (assignment == "Classic") {
+                if (update == "Mean_Frechet") {
+                    //CHANGE WHEN UPDATE MEAN FRECHET IS READY
+                    lloyds(k_cluster, output_file, assignment, complete_flag);
+                }
+                else if (update == "Mean_Vector") {
+                    lloyds(k_cluster, output_file, assignment, complete_flag);
+                }
+                
+            }
             reverse_assignment_lsh(g_lsh, output_file, k_cluster, assignment, false);
 
             continue_execution = 0;
