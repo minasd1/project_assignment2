@@ -195,6 +195,9 @@ void reverse_assignment_cube(G_Hypercube g, fstream& output_file, int k, int pro
 
         previous_curves_assigned = new_curves_assigned;
 
+        //UPDATE THE CENTROIDS
+        update_as_vector(cluster_table, last_id);
+
         first_iteration = false;
 
     }while(1);

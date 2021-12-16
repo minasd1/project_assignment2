@@ -56,6 +56,9 @@ double file_get_max_value(fstream& file, string file_name){
 
     max_coordinate_value = max(max_coordinate_value, (double)num_of_values);
 
+    file.clear();
+    file.seekg(0, file.beg);
+
     return max_coordinate_value;
 
 }

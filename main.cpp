@@ -160,6 +160,7 @@ int main(int argc, char* argv[]){
 
         query_max_coordinate_value = file_get_max_value(query_file, query_file_name); 
         max_coordinate_value = max(max_coordinate_value, query_max_coordinate_value);
+
     }
 
     //INITIALIZE G FRECHET FUNCTION THAT USES g_lsh
@@ -208,8 +209,7 @@ int main(int argc, char* argv[]){
 
     }
 
-    query_file.clear();
-    query_file.seekg(0, query_file.beg);
+    
 
     while(continue_execution == 1){
 
