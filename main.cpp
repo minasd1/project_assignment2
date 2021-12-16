@@ -433,6 +433,7 @@ int main(int argc, char* argv[]){
             
             //OPEN FILE TO WRITE RESULTS TO
             open_file(&output_file, output_file_name, fstream::out);
+
             if (assignment == "Classic") {
                 if (update == "Mean_Frechet") {
                     //CHANGE WHEN UPDATE MEAN FRECHET IS READY
@@ -443,7 +444,11 @@ int main(int argc, char* argv[]){
                 }
                 
             }
-            reverse_assignment_lsh(g_lsh, output_file, k_cluster, assignment, false);
+            else if(assignment == "LSH"){
+
+                reverse_assignment_lsh(g_lsh, output_file, k_cluster, assignment, false);
+            }
+            
 
             continue_execution = 0;
             close_file(&output_file);
