@@ -30,7 +30,7 @@ void k_means_plus_plus(int k, string assignment){
 }
 
 //IMPLEMENTATION OF THE LLOYDS ALGORITHM
-void lloyds(int number_of_clusters, fstream& output_file, string assignment, bool complete_flag)
+void lloyds(int number_of_clusters, fstream& output_file, string assignment, string update, bool complete_flag)
 {
     int i, dimensions, j;
     int nearest_centroid; //NEAREST CENTROID'S INDEX IN THE centroid TABLE
@@ -51,7 +51,7 @@ void lloyds(int number_of_clusters, fstream& output_file, string assignment, boo
     //ASSIGN CURVESS IN CLUSTERS FOR THE FIRST TIME
     for (i=0 ; i < num_of_curves ; i++) { //FOR EVERY POINT
         current_curve= curve_vector_get_curve(i);
-        nearest_centroid= find_nearest_centroid(current_curve);
+        nearest_centroid= find_nearest_centroid(current_curve, update);
         previous_cluster_table[nearest_centroid].push_back(current_curve.first.second);
         changes_made++;
     }
@@ -70,7 +70,7 @@ void lloyds(int number_of_clusters, fstream& output_file, string assignment, boo
         //MAKE A NEW ASSIGNMENT FOR ALL THE CURVES
         for (i=0 ; i < num_of_curves ; i++) { //FOR EVERY CURVE
             current_curve= curve_vector_get_curve(i);
-            nearest_centroid= find_nearest_centroid(current_curve);
+            nearest_centroid= find_nearest_centroid(current_curve, update);
             
             //IF A CURVE IS BEING ASSIGNED IN A DIFFERENT CLUSTER THAN THE ONE IT WAS ASSIGNED IN THE PREVIOUS ASSIGNMENT
             if (!already_in_that_cluster(previous_cluster_table, nearest_centroid, current_curve.first.second)) {
@@ -99,7 +99,7 @@ void lloyds(int number_of_clusters, fstream& output_file, string assignment, boo
     auto time_passed = std::chrono::duration_cast<std::chrono::seconds>(stop_time - start_time);
     output_file << "clustering_time: " << time_passed.count() << " seconds" << endl;
     output_file << "Silhouette: ";
-    print_silhouette(previous_cluster_table, output_file);
+    print_silhouette(previous_cluster_table, output_file, update);
     if (complete_flag) {
         for(i=0 ; i < number_of_clusters ; i++) {
             output_file << "CLUSTER-" << i+1 << " {size: " << previous_cluster_table[i].size();
@@ -120,7 +120,7 @@ void lloyds(int number_of_clusters, fstream& output_file, string assignment, boo
     
 }
 
-void reverse_assignment_lloyds(vector<vector<int>>& cluster_table, int number_of_clusters, int num_of_curves, int last_id){
+void reverse_assignment_lloyds(vector<vector<int>>& cluster_table, int number_of_clusters, int num_of_curves, int last_id, string update){
 
     int i, dimensions, j;
     int nearest_centroid; //NEAREST CENTROID'S INDEX IN THE centroid TABLE
@@ -147,7 +147,7 @@ void reverse_assignment_lloyds(vector<vector<int>>& cluster_table, int number_of
         for (i=0 ; i < num_of_curves; i++) { //FOR EVERY POINT
             current_curve = curve_vector_get_curve(i);
             if(!already_assigned(current_curve.first.second)){
-                nearest_centroid= find_nearest_centroid(current_curve);
+                nearest_centroid= find_nearest_centroid(current_curve, update);
 
                 //IF A POINT IS BEING ASSIGNED IN A DIFFERENT CLUSTER THAN THE ONE IT WAS ASSIGNED IN THE PREVIOUS ASSIGNMENT
                 if (!already_in_that_cluster(previous_cluster_table, nearest_centroid, current_curve.first.second)) {
@@ -177,7 +177,7 @@ void reverse_assignment_lloyds(vector<vector<int>>& cluster_table, int number_of
 
 }
 
-void reverse_assignment_lsh(G_Lsh g, fstream& output_file, int k, string assignment, bool complete_flag){
+void reverse_assignment_lsh(G_Lsh g, fstream& output_file, int k, string assignment, string update, bool complete_flag){
 
     pair<pair<string, int>, vector<double>> centroid; //HERE CENTROIDS ARE THE QUERY POINTS
     vector<int> appending_curves;        //NEW CURVES THAT WILL BE ADDED TO CLUSTERS   
@@ -267,7 +267,7 @@ void reverse_assignment_lsh(G_Lsh g, fstream& output_file, int k, string assignm
     //IF THERE ARE MORE CURVES TO BE ASSIGNED
     if(is_assigned_count_assigned() < num_of_curves){
         //ASSIGN THE REST OF THE POINTS THAT HAVE NOT BEEN ASSIGNED TO CLUSTERS USING LLOYD'S ALGORITHM
-        reverse_assignment_lloyds(cluster_table, k, num_of_curves, last_id);
+        reverse_assignment_lloyds(cluster_table, k, num_of_curves, last_id, update);
     }
 
     //WHEN THE CLUSTERS HAVE BEEN DEFINITIVELY FORMED STOP COUNTING TIME
@@ -275,7 +275,7 @@ void reverse_assignment_lsh(G_Lsh g, fstream& output_file, int k, string assignm
 
 }
 
-void reverse_assignment_cube(G_Hypercube g, fstream& output_file, int k, int probes, string assignment, bool complete_flag){
+void reverse_assignment_cube(G_Hypercube g, fstream& output_file, int k, int probes, string assignment, string update, bool complete_flag){
 
     pair<pair<string, int>, vector<double>> centroid; //HERE CENTROIDS ARE THE QUERY POINTS
     vector<int> appending_curves;        //NEW CURVES THAT WILL BE ADDED TO CLUSTERS   
@@ -368,7 +368,7 @@ void reverse_assignment_cube(G_Hypercube g, fstream& output_file, int k, int pro
     //IF THERE ARE MORE CURVES TO BE ASSIGNED
     if(is_assigned_count_assigned() < num_of_curves){
         //ASSIGN THE REST OF THE POINTS THAT HAVE NOT BEEN ASSIGNED TO CLUSTERS USING LLOYD'S ALGORITHM
-        reverse_assignment_lloyds(cluster_table, k, num_of_curves, last_id);
+        reverse_assignment_lloyds(cluster_table, k, num_of_curves, last_id, update);
     }
 
 }

@@ -6,6 +6,6 @@
 
 using namespace std;
 
-void print_silhouette(vector<vector<int>> cluster_table, fstream& output_file);
+void print_silhouette(vector<vector<int>> cluster_table, fstream& output_file, string update);
 
 #endif

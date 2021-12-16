@@ -435,18 +435,14 @@ int main(int argc, char* argv[]){
             open_file(&output_file, output_file_name, fstream::out);
 
             if (assignment == "Classic") {
-                if (update == "Mean_Frechet") {
-                    //CHANGE WHEN UPDATE MEAN FRECHET IS READY
-                    lloyds(k_cluster, output_file, assignment, complete_flag);
-                }
-                else if (update == "Mean_Vector") {
-                    lloyds(k_cluster, output_file, assignment, complete_flag);
+
+                    lloyds(k_cluster, output_file, assignment, update, complete_flag);
                 }
                 
-            }
+            
             else if(assignment == "LSH"){
 
-                reverse_assignment_lsh(g_lsh, output_file, k_cluster, assignment, false);
+                reverse_assignment_lsh(g_lsh, output_file, k_cluster, assignment, update, false);
             }
             
 
@@ -456,6 +452,7 @@ int main(int argc, char* argv[]){
     }
 
     close_file(&input_file);
+    
 
     return 0;
 }

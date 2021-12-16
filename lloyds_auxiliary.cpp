@@ -12,7 +12,7 @@ double max_double(double& a, double& b)
 }
 
 //RECEIVES A CURVE AND RETURNS THE SECOND NEAREST CENTROID'S INDEX IN THE TABLE OF CENTROIDS
-int find_second_nearest_centroid(pair<pair<string, int>, vector<double>>& current_curve)
+int find_second_nearest_centroid(pair<pair<string, int>, vector<double>>& current_curve, string update)
 {
     vector<dist_id_pair> pairs;
     dist_id_pair current_pair;
@@ -21,7 +21,12 @@ int find_second_nearest_centroid(pair<pair<string, int>, vector<double>>& curren
     //PUSH BACK ALL THE CENTROIDS' ID - DISTANCE PAIRS IN A TABLE
     for (i= 0; i < centroids_get_size(); i++) {
         current_pair.id= i;
-        current_pair.dist= calculate_distance(current_curve.second, curve_vector_get_curve(centroids_get_centroid(i)).second);
+        if (update == "Mean_Vector") {
+            current_pair.dist= calculate_distance(current_curve.second, curve_vector_get_curve(centroids_get_centroid(i)).second);
+        }
+        else if (update == "Mean_Frechet") {
+            current_pair.dist= (float) curve_calculate_dfd(current_curve.second, curve_vector_get_curve(centroids_get_centroid(i)).second);
+        }
         pairs.push_back(current_pair);
     }
     //SORT THAT TABLE IN ASCENDING DISTANCE ORDER
@@ -31,7 +36,7 @@ int find_second_nearest_centroid(pair<pair<string, int>, vector<double>>& curren
 }
 
 //RECEIVES A CURVE AND RETURNS THE NEAREST CENTROID'S INDEX IN THE TABLE OF CENTROIDS
-int find_nearest_centroid(pair<pair<string, int>, vector<double>>& current_curve)
+int find_nearest_centroid(pair<pair<string, int>, vector<double>>& current_curve, string update)
 {
     int i, nearest_centroid;
     double distance, min_distance;
@@ -39,12 +44,23 @@ int find_nearest_centroid(pair<pair<string, int>, vector<double>>& current_curve
 
     //SET AS MINIMUM DISTANCE THE ONE BETWEEN THE CURVE AND THE FIRST CENTROID
     other_curve= curve_vector_get_curve(centroids_get_centroid(0));
-    min_distance= calculate_distance(current_curve.second, other_curve.second);
+    if (update == "Mean_Vector") {
+        min_distance= calculate_distance(current_curve.second, other_curve.second);
+    }
+    else if (update == "Mean_Frechet") {
+            min_distance= curve_calculate_dfd(current_curve.second, other_curve.second);
+    }
+    
     nearest_centroid= 0;
     //FOR THE REST OF THE CENTROIDS
     for (i= 1 ; i < centroids_get_size() ; i++) {
         other_curve= curve_vector_get_curve(centroids_get_centroid(i));
-        distance= calculate_distance(current_curve.second, other_curve.second);
+        if (update == "Mean_Vector") {
+            distance= calculate_distance(current_curve.second, other_curve.second);
+        }
+        else if (update == "Mean_Frechet") {
+            distance= curve_calculate_dfd(current_curve.second, other_curve.second);
+        }
         if (distance < min_distance) {
             min_distance= distance;
             nearest_centroid= i;

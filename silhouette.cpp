@@ -7,7 +7,7 @@
 using namespace std;
 
 //PRINTS THE SILHOUETTE'S DATA
-void print_silhouette(vector<vector<int>> cluster_table, fstream& output_file)
+void print_silhouette(vector<vector<int>> cluster_table, fstream& output_file, string update)
 {
     int i, j, k, second_nearest;
     double sum_a, sum_b, a, b, silhouette, cluster_mean_silhouette, dataset_mean_silhouette, cluster_sum, dataset_sum;
@@ -27,7 +27,7 @@ void print_silhouette(vector<vector<int>> cluster_table, fstream& output_file)
             }
             a= sum_a/double(cluster_table[i].size()-1);
             //cout << "Sum_a = " << sum_a << " and a= "<< a<<  endl;
-            second_nearest= find_second_nearest_centroid(current_curve);
+            second_nearest= find_second_nearest_centroid(current_curve, update);
             //cout << "second_nearest= " << second_nearest << endl;
             sum_b= 0.0;
             for (k= 0; k < cluster_table[second_nearest].size(); k++) { //FOR EVERY CURVE IN THE SECOND NEAREST CLUSTER
