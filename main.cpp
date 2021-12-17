@@ -38,7 +38,7 @@ int main(int argc, char* argv[]){
     int window= 50;                
     int k_cluster ;                 //NUMBER OF CENTROIDS - CLUSTERING
     double delta = 2.5;
-    double epsilon = 0.1;
+    double epsilon = 0.01;
     bool complete= false;
 
     fstream input_file;             //FILE WE READ INPUT FROM
@@ -51,7 +51,7 @@ int main(int argc, char* argv[]){
    
     int start, finish, buckets, id, count, M, num_of_curve_values, 
         query_num_of_curve_values, continue_execution, sum_approximate_time, 
-        sum_exact_time, query_curves_counted; 
+        sum_exact_time, query_curves_counted, max_mean_curve_length; 
     
     int curves_divider = 16;        //USED TO GET TOTAL CURVES IN EACH HASHTABLE
     
@@ -143,6 +143,8 @@ int main(int argc, char* argv[]){
     if(strcmp(argv[0], "./cluster") == 0){
 
         read_configuration_file(config_file, config_file_name, k_cluster, L, k, M_cube, k_cube, probes);
+        max_mean_curve_length= 4 * num_of_curve_values;
+        cout << "MAX MEAN CURVE LENGTH " << max_mean_curve_length << endl;
     }
 
     max_coordinate_value = max(max_value, (double)num_of_curve_values);
@@ -437,7 +439,7 @@ int main(int argc, char* argv[]){
 
             if (assignment == "Classic") {
 
-                    lloyds(k_cluster, output_file, assignment, update, generator, complete_flag);
+                    lloyds(k_cluster, output_file, assignment, update, epsilon, max_mean_curve_length, generator, complete_flag);
                 }
                 
             
@@ -447,14 +449,14 @@ int main(int argc, char* argv[]){
             }
             else if (assignment == "debug") {
                 int last_known_id= number_of_curves-1;
-                lloyds(k_cluster, output_file, "Classic", update, generator, complete_flag);
+                lloyds(k_cluster, output_file, "Classic", update, epsilon, max_mean_curve_length, generator, complete_flag);
                 int i, floors_to_peak, cluster_size= 14;
                 vector <vector<pair<pair<string,int>, vector<double>>>> curves;
                 pair<pair<string, int>, vector<double>> mean_curve;
 
-                vector<int> cluster{10, 11, 24, 47, 71, 84, 85, 23 , 43, 55, 19, 33, 34, 35, 36, 37, 38,39,44, 45,46,47,70,71,77,78,79,90,80,81,82,83,84,85,86};
+                vector<int> cluster{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27};
                
-                mean_curve= find_mean_curve_Macchu_Picchu(cluster.size(), cluster, generator, last_known_id);
+                mean_curve= find_mean_curve_Macchu_Picchu(cluster.size(), cluster, generator, epsilon, max_mean_curve_length, last_known_id);
                 cout << "Mean curve is: " << mean_curve.first.first << " " << mean_curve.first.second << endl;
                 cout << "with coordinates :  ";
                 for (i= 0 ; i < mean_curve.second.size() ; i++) {

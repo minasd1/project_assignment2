@@ -25,7 +25,12 @@ void print_silhouette(vector<vector<int>> cluster_table, fstream& output_file, s
                 other_curve= curve_vector_get_curve(cluster_table[i][k]);
                 sum_a+= calculate_distance(current_curve.second, other_curve.second);
             }
-            a= sum_a/double(cluster_table[i].size()-1);
+            if (cluster_table[i].size()==1) {
+                a= 0; //IF THERE IS ONLY ONE ELEMENT IN THE CLUSTER THE DISTANCE WITH ITSELF IS ZERO
+            }
+            else {
+                a= sum_a/double(cluster_table[i].size()-1);
+            }
             //cout << "Sum_a = " << sum_a << " and a= "<< a<<  endl;
             second_nearest= find_second_nearest_centroid(current_curve, update);
             //cout << "second_nearest= " << second_nearest << endl;

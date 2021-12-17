@@ -93,6 +93,7 @@ Curve convert_for_continuous_frechet(const pair<pair<string, int>, vector<double
 vector<pair<int,int>> find_optimal_traversal(const vector<double>& curve1, const vector<double>& curve2);
 pair<pair<string, int>, vector<double>> get_mean_curve(const vector<double>& curve1, const vector<double>& curve2);
 pair<pair<string, int>, vector<double>> get_mean_curve_vector(vector<double> vector_of_sums, int num_of_vectors, int& last_known_id);
+void filter(vector<double>& curve, double epsilon, int max_length);
 
 /*--------------------OPERATIONS BETWEEN VECTORS FUNCTIONS-----------------*/
 int calculate_dot_product(const pair<pair<string, int>, vector<double>>& curve, vector <int>& d_vector);

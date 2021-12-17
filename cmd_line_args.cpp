@@ -115,6 +115,10 @@ int read_cmd_args(int argc, char** argv, string& input_file, string& query_file,
                     assignment_flag= true;
                     assignment= "LSH_Frechet";
             }
+            else if ((string)argv[i+1] == "debug") {
+                    assignment_flag= true;
+                    assignment= "debug";
+            }
             else {
                 cerr << "Unknown assignment method \"" << argv[i+1] << "\". " << "Please run the program with one of the acceptable methods:" << endl;
                 cerr << "(Classic, LSH, Hypercube, LSH_Frechet)" << endl;
