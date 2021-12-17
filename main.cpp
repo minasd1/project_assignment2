@@ -50,11 +50,11 @@ int main(int argc, char* argv[]){
    
     int start, finish, buckets, id, count, M, num_of_curve_values, 
         query_num_of_curve_values, continue_execution, sum_approximate_time, 
-        sum_exact_time, query_curves_counted; 
+        sum_exact_time, query_curves_counted, factor; 
     
     int curves_divider = 16;        //USED TO GET TOTAL CURVES IN EACH HASHTABLE
     
-    bool is_query_curve, first_iteration, complete_flag, new_query_file;
+    bool is_query_curve, is_mean_curve, first_iteration, complete_flag, new_query_file, flag_frechet_cluster;
 
     unsigned int hash_value, number_of_curves ;
  
@@ -72,12 +72,15 @@ int main(int argc, char* argv[]){
     query_num_of_curve_values = 0;
     number_of_curves = 0;
     continue_execution = 1;
+    factor = 1;
     max_value = 0.0;
     query_max_value = 0.0;
     is_query_curve = true;
     first_iteration = true;
     complete= false;
     new_query_file = false;
+    flag_frechet_cluster = false;
+    is_mean_curve = true;
 
     read_cmd_args(argc, argv, input_file_name, query_file_name, k, k_cube, L, output_file_name, 
                   N, R, M_cube, probes, config_file_name, assignment, complete_flag, algorithm, 
@@ -142,9 +145,26 @@ int main(int argc, char* argv[]){
     if(strcmp(argv[0], "./cluster") == 0){
 
         read_configuration_file(config_file, config_file_name, k_cluster, L, k, M_cube, k_cube, probes);
+        if((assignment == "Classic" && update == "Mean_Frechet") || (assignment == "LSH_Frechet")){
+            //V VECTORS IN LSH MUBT HAVE THE SAME SIZE AS THE CONCATENATED CURVE VECTOR
+            factor = 4;
+
+            // extra_values_factor = 2;
+            flag_frechet_cluster = true;
+        }
     }
 
     max_coordinate_value = max(max_value, (double)num_of_curve_values);
+
+    if(strcmp(argv[0], "./search") == 0){
+
+        query_max_coordinate_value = file_get_max_value(query_file, query_file_name); 
+        max_coordinate_value = max(max_coordinate_value, query_max_coordinate_value);
+
+        if(algorithm == "Frechet" && metric == "discrete"){
+            factor = 2;
+        }
+    }
     
     curves_ID_vector_initialize(number_of_curves, L);
 
@@ -152,20 +172,13 @@ int main(int argc, char* argv[]){
     buckets = number_of_curves/curves_divider;
 
     //INITIALIZE G FUNCTION THAT LEADS US TO LSH HASHTABLE BUCKETS
-    G_Lsh g_lsh(k, num_of_curve_values, generator, window, M, buckets, L);
+    G_Lsh g_lsh(k, num_of_curve_values*factor, generator, window, M, buckets, L);
 
     //INITIALIZE G FUNCTION THAT LEADS US TO HYPERCUBE BUCKETS
     G_Hypercube g_cube(num_of_curve_values, generator, window, k_cube);
 
-    if(strcmp(argv[0], "./search") == 0){
-
-        query_max_coordinate_value = file_get_max_value(query_file, query_file_name); 
-        max_coordinate_value = max(max_coordinate_value, query_max_coordinate_value);
-
-    }
-
     //INITIALIZE G FRECHET FUNCTION THAT USES g_lsh
-    G_Frechet g_frechet(g_lsh, generator, L, delta, max_coordinate_value, num_of_curve_values);
+    G_Frechet g_frechet(g_lsh, generator, L, delta, max_coordinate_value, num_of_curve_values, flag_frechet_cluster);
 
     if(strcmp(argv[0], "./search") == 0 || strcmp(argv[0], "./cluster") == 0){
 
@@ -178,11 +191,11 @@ int main(int argc, char* argv[]){
             for(int i = 0; i < number_of_curves; i++){
                 if(metric == "discrete"){
 
-                    g_frechet.hash(curve_vector_get_curve(i), hash_vector, id_vector, !is_query_curve, 2);
+                    g_frechet.hash(curve_vector_get_curve(i), hash_vector, id_vector, !is_query_curve, !is_mean_curve, 2);
                 }
                 else if(metric == "continuous"){
 
-                    g_frechet.hash(curve_vector_get_curve(i), hash_vector, id_vector,  !is_query_curve, 1);
+                    g_frechet.hash(curve_vector_get_curve(i), hash_vector, id_vector,  !is_query_curve, !is_mean_curve, 1);
                 }    
                 
             }

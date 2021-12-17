@@ -318,14 +318,14 @@ void centroids_calculate_min_distance_input(vector<float>& curves_min_distances,
 }
 
 //GET EVERY CENTROID'S HASHTABLE BUCKET HASHES - USING FRECHET HASHING
-void centroids_get_hashtable_hashes_frechet(G_Frechet g, vector<vector<int>>& hashes){
+void centroids_get_hashtable_hashes_frechet(G_Frechet g, vector<vector<int>>& hashes, bool is_mean){
 
     vector<int> hash_vector;
     vector<int> id_vector;
 
     for(int i = 0; i < centroids.size(); i++){
        
-        g.hash(curve_vector_get_curve(centroids[i]), hash_vector, id_vector, true, 2);
+        g.hash(curve_vector_get_curve(centroids[i]), hash_vector, id_vector, true, is_mean, 2);
         hashes.push_back(hash_vector);
 
         hash_vector.clear();
@@ -728,7 +728,7 @@ vector<pair<int,int>> find_optimal_traversal(const vector<double>& curve1, const
     return optimal_traversal;
 }
 
-//GET MEAN CURVE BETWEEN TWO CURVES
+//GET MEAN CURVE BETWEEN TWO CURVES - FRECHET
 pair<pair<string, int>, vector<double>> get_mean_curve(const vector<double>& curve1, const vector<double>& curve2){
 
     pair<pair<string, int>, vector<double>> mean_curve;

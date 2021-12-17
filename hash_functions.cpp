@@ -180,8 +180,8 @@ void G_Hypercube::hash(const pair<pair<string, int>, vector<double>>& curve, uns
 
 
 //GENERATES VECTOR OF FLOATS USED IN GRID CURVE
-G_Frechet::G_Frechet(G_Lsh g_func, engine gen, int L_num, double delta_value, double max_value, int num_curve_values)
-    :g(g_func), generator(gen), L(L_num), delta(delta_value), num_of_curve_values(num_curve_values)
+G_Frechet::G_Frechet(G_Lsh g_func, engine gen, int L_num, double delta_value, double max_value, int num_curve_values, bool flag_fc)
+    :g(g_func), generator(gen), L(L_num), delta(delta_value), num_of_curve_values(num_curve_values), flag_frechet_cluster(flag_fc)
 {
     t.resize(L, vector<float>(0));
     int num_of_grid_vertices = 0;//1
@@ -198,6 +198,15 @@ G_Frechet::G_Frechet(G_Lsh g_func, engine gen, int L_num, double delta_value, do
         
         create_vector_t(t[i], num_of_grid_vertices, delta, generator);
     }
+
+    if(flag_frechet_cluster == true){
+        extra_values_factor = 2;
+        max_length = 2 * num_of_curve_values * extra_values_factor;
+    }
+    else{
+        extra_values_factor = 1;
+    }
+    
     
     // num_of_grid_values = num_of_grid_vertices;
 } 
@@ -205,7 +214,7 @@ G_Frechet::G_Frechet(G_Lsh g_func, engine gen, int L_num, double delta_value, do
 //PRODUCES A 1d VECTOR WITH DOUBLE VALUES THAT IS THE KEY FOR HASHTABLE INSERTION
 //LSH HASH GETS THAT KEY AND RETURNS THE PROPER HASHTABLE BUCKETS THAT
 //CURRENT CURVE'S ID MUST BE INSERTED TO
-void G_Frechet::hash(const pair<pair<string, int>, vector<double>>& curve, vector<int>& hash_vector, vector<int>& id_vector, bool is_query, int grid_dimensions)
+void G_Frechet::hash(const pair<pair<string, int>, vector<double>>& curve, vector<int>& hash_vector, vector<int>& id_vector, bool is_query, bool is_mean, int grid_dimensions)
 {
     hash_vector.clear();
    
@@ -223,7 +232,7 @@ void G_Frechet::hash(const pair<pair<string, int>, vector<double>>& curve, vecto
     //CONTINUOUS FRECHET - CURVE NEEDS TO BE FILTERED FIRST
     if(grid_dimensions == 1){
 
-        filter(curve.second, filtered_curve.second, epsilon);
+        filter(curve.second, filtered_curve.second, epsilon, is_mean);
     }
    
     //FOR EVERY HASHTABLE
@@ -231,8 +240,15 @@ void G_Frechet::hash(const pair<pair<string, int>, vector<double>>& curve, vecto
         
         if(grid_dimensions == 2){       //DISCRETE FRECHET
 
-            //SNAP CURVE TO CURRENT GRID
-            snap_to_grid(curve, snapped_curve.second, grid_dimensions, i-1);
+            if((is_mean) && (curve.second.size() > max_length)){//FILTER IT TO AVOID BIG COMPLEXITY
+                filter(curve.second, filtered_curve.second, epsilon, is_mean);
+                snap_to_grid(filtered_curve,snapped_curve.second, grid_dimensions, i-1);
+            }
+            else{
+                //SNAP CURVE TO CURRENT GRID
+                snap_to_grid(curve, snapped_curve.second, grid_dimensions, i-1);
+            }
+            
         }
         else if(grid_dimensions == 1){  //CONTINUOUS FRECHET 
 
@@ -241,10 +257,27 @@ void G_Frechet::hash(const pair<pair<string, int>, vector<double>>& curve, vecto
             minima_maxima(snapped_curve.second);
         }
         
-        padding(snapped_curve.second, grid_dimensions);
-        
-        //GET THE BUCKET THAT CURVE MUST BE INSERTED USING LSH HASHING
-        g.hash(snapped_curve, hash_values, is_query, 1);       //i CAN POSSIBLY BE A  BOOLEAN FLAG
+        if(!is_mean){//IF IT IS NOT A MEAN CURVE - CLUSTERING
+            padding(snapped_curve.second, grid_dimensions, extra_values_factor);
+
+            //GET THE BUCKET THAT CURVE MUST BE INSERTED USING LSH HASHING
+            g.hash(snapped_curve, hash_values, is_query, 1);       //i CAN POSSIBLY BE A  BOOLEAN FLAG
+        }
+        else{       //IF IT IS A MEAN CURVE
+            //IT SHOULD BE STORED WITH THE SAME KEY LENGTH AS THE INPUT CURVES
+            if(snapped_curve.second.size() > max_length){
+                this->filter(snapped_curve.second, filtered_curve.second, epsilon, is_mean);
+                //HASH THE FILTERED CURVE USING LSH
+                g.hash(filtered_curve, hash_values, is_query, 1);       
+            }
+            else if(snapped_curve.second.size() < max_length){
+                padding(snapped_curve.second, grid_dimensions, extra_values_factor);
+                g.hash(snapped_curve, hash_values, is_query, 1);
+            }
+            else{
+                g.hash(snapped_curve, hash_values, is_query, 1);
+            }
+        }
         
         //IF IT'S A QUERY CURVE, GET IT'S IDS
         if(is_query == true){
@@ -270,17 +303,28 @@ void G_Frechet::hash(const pair<pair<string, int>, vector<double>>& curve, vecto
 
 //GET A CURVE FROM INPUT AND FILTER IT SO THAT SMALL CHANGES IN CURVES 
 //VALUES WILL BE IGNORED
-void G_Frechet::filter(const vector<double>& curve, vector<double>& filtered_curve, double epsilon){
+void G_Frechet::filter(const vector<double>& curve, vector<double>& filtered_curve, double epsilon, bool is_mean){
 
     filtered_curve.push_back(curve[0]);
 
     for(int i = 1; i < curve.size() - 1; i++){
 
         if((abs(curve[i-1] - curve[i]) > epsilon) || (abs(curve[i] - curve[i+1]) > epsilon)){
+            if(!is_mean){
 
-            filtered_curve.push_back(curve[i]);
+                filtered_curve.push_back(curve[i]);
+            }
+            else{
+                if(filtered_curve.size() < max_length){
+
+                    filtered_curve.push_back(curve[i]);
+                }
+            }
+            
         }
     }
+
+    
 
     filtered_curve.push_back(curve[curve.size() - 1]);
 
@@ -400,15 +444,15 @@ void G_Frechet::snap_to_grid(const pair<pair<string, int>, vector<double>>& curv
 
 //GET CURVE AFTER SNAPPING TO GRID
 //ADD WITH A LARGE VALUE UNTIL MAXIMUM SIZE IS REACHED
-void G_Frechet::padding(vector<double>& snapped_curve, int grid_dimensions){
+void G_Frechet::padding(vector<double>& snapped_curve, int grid_dimensions, int extra_values_factor){
 
     //PADDING VALUE IS GREATER THAN ALL THE CURVE VERTICES VALUES TO AVOID FALSE POSITIVES
     double padding_value = max_coordinate_value + 1;
    
     //IF SNAPPED CURVE HAS LESS THAN LESS THAN THE MAXIMUM VALUES
-    if(snapped_curve.size() < grid_dimensions * num_of_curve_values){
+    if(snapped_curve.size() < grid_dimensions * num_of_curve_values * extra_values_factor){
 
-        for(int i = snapped_curve.size(); i < grid_dimensions * num_of_curve_values; i++){
+        for(int i = snapped_curve.size(); i < grid_dimensions * num_of_curve_values * extra_values_factor; i++){
             //FILL WITH A VERY LARGE VALUE UNTIL MAXIMUM SIZE IS REACHED
             snapped_curve.push_back(padding_value);
         }

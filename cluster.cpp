@@ -384,6 +384,7 @@ void reverse_assignment_frechet(G_Frechet g, fstream& output_file, int k, string
     int radius; 
     int last_id = curve_vector_get_size()-1;
     bool first_iteration = true;
+    bool is_mean;
     int new_curves_assigned = 0;
     int previous_curves_assigned = 0;
     int num_of_curves = curve_vector_get_size();
@@ -395,9 +396,15 @@ void reverse_assignment_frechet(G_Frechet g, fstream& output_file, int k, string
     radius = centroids_get_radii();      //SET MINIMUM DISTANCE BETWEEN CENTROIDS DIVIDED BY 2 AS FIRST RADIUS
     
     do{
-
+        if(first_iteration == true){
+            is_mean = false;
+        }
+        else{
+            is_mean = true;
+        }
+        
         //GET EVERY CENTROID'S HASHTABLE BUCKET HASHES
-        centroids_get_hashtable_hashes_frechet(g, hashes);
+        centroids_get_hashtable_hashes_frechet(g, hashes, is_mean);
         
         //FOR EVERY CENTROID
         for(int i = 0; i < centroids_get_size(); i++){

@@ -56,7 +56,7 @@ void centroids_pick_next_centroid(vector<float>& partial_sums);
 void centroids_duplicates_assign_to_nearest_centroid(vector<pair<vector<int>,int>>& curves_in_range);
 float centroids_calculate_min_distance_curve(vector<double>& curve, string assignment);
 void centroids_calculate_min_distance_input(vector<float>& curves_min_distances, string assignment);
-void centroids_get_hashtable_hashes_frechet(G_Frechet g, vector<vector<int>>& hashes);
+void centroids_get_hashtable_hashes_frechet(G_Frechet g, vector<vector<int>>& hashes, bool is_mean);
 void centroids_get_hashtable_hashes_lsh(G_Lsh g, vector<vector<int>>& hashes);
 void centroids_get_hypercube_hashes(G_Hypercube g, vector<int>& hashes);
 void centroids_clear();
