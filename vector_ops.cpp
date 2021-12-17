@@ -764,6 +764,27 @@ pair<pair<string, int>, vector<double>> get_mean_curve_vector(vector<double> vec
     return mean_curve;
 }
 
+//FILTER A CURVE TO HAVE A PREDEFINED SIZE
+void filter(const vector<double>& curve, vector<double>& filtered_curve, double epsilon, int max_length){
+
+    filtered_curve.push_back(curve[0]);
+
+    for(int i = 1; i < curve.size() - 1; i++){
+
+        if((abs(curve[i-1] - curve[i]) > epsilon) || (abs(curve[i] - curve[i+1]) > epsilon)){
+                
+            if(filtered_curve.size() < max_length){
+
+                filtered_curve.push_back(curve[i]);
+            }
+        }
+        
+    }
+
+    filtered_curve.push_back(curve[curve.size() - 1]);
+
+}
+
 //CALCULATE DOT PRODUCT OF TWO VECTORS
 int calculate_dot_product(const pair<pair<string, int>, vector<double>>& curve, vector <int>& d_vector){
     double product = 0.0;
