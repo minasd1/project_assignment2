@@ -21,17 +21,18 @@ vector<dist_id_pair> frechet_find_approximate_knn(pair<pair<string, int>, vector
     int i;
     bool at_least_one_candidate_has_same_id;
     int same_id_counter;
+    bool is_mean= false;
 
     Curve query_curve_continuous = convert_for_continuous_frechet(query_curve, 1);
 
     if(metric == "discrete"){
 
         //HASH THE QUERY CURVE TO FIND THE BUCKETS WHERE IT WOULD BELONG
-        g.hash(query_curve, buckets_indexes, query_curves_ids, true, 2);
+        g.hash(query_curve, buckets_indexes, query_curves_ids, true, is_mean, 2);
     }
     else if(metric == "continuous"){
 
-        g.hash(query_curve, buckets_indexes, query_curves_ids, true, 1);
+        g.hash(query_curve, buckets_indexes, query_curves_ids, true, is_mean, 1);
     }
     
     
