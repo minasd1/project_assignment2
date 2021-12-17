@@ -765,7 +765,9 @@ pair<pair<string, int>, vector<double>> get_mean_curve_vector(vector<double> vec
 }
 
 //FILTER A CURVE TO HAVE A PREDEFINED SIZE
-void filter(const vector<double>& curve, vector<double>& filtered_curve, double epsilon, int max_length){
+void filter(vector<double>& curve, double epsilon, int max_length){
+
+    vector<double> filtered_curve;
 
     filtered_curve.push_back(curve[0]);
 
@@ -782,6 +784,13 @@ void filter(const vector<double>& curve, vector<double>& filtered_curve, double 
     }
 
     filtered_curve.push_back(curve[curve.size() - 1]);
+
+    curve.clear();
+
+    for(int i = 0; i < filtered_curve.size(); i++){
+        
+        curve.push_back(filtered_curve[i]);
+    }
 
 }
 
