@@ -22,6 +22,7 @@
 #include "user_input.h"
 #include "cluster.h"
 #include "conf_file.h"
+#include "mean_curve.h"
 
 
 
@@ -436,13 +437,31 @@ int main(int argc, char* argv[]){
 
             if (assignment == "Classic") {
 
-                    lloyds(k_cluster, output_file, assignment, update, complete_flag);
+                    lloyds(k_cluster, output_file, assignment, update, generator, complete_flag);
                 }
                 
             
             else if(assignment == "LSH"){
 
                 reverse_assignment_lsh(g_lsh, output_file, k_cluster, assignment, update, false);
+            }
+            else if (assignment == "debug") {
+                int last_known_id= number_of_curves-1;
+                lloyds(k_cluster, output_file, "Classic", update, generator, complete_flag);
+                int i, floors_to_peak, cluster_size= 14;
+                vector <vector<pair<pair<string,int>, vector<double>>>> curves;
+                pair<pair<string, int>, vector<double>> mean_curve;
+
+                vector<int> cluster{10, 11, 24, 47, 71, 84, 85, 23 , 43, 55, 19, 33, 34, 35, 36, 37, 38,39,44, 45,46,47,70,71,77,78,79,90,80,81,82,83,84,85,86};
+               
+                mean_curve= find_mean_curve_Macchu_Picchu(cluster.size(), cluster, generator, last_known_id);
+                cout << "Mean curve is: " << mean_curve.first.first << " " << mean_curve.first.second << endl;
+                cout << "with coordinates :  ";
+                for (i= 0 ; i < mean_curve.second.size() ; i++) {
+                    cout << mean_curve.second[i] << " ";
+                } 
+                cout << endl << "Number of coordinates: " << mean_curve.second.size() << endl; 
+
             }
             
 
