@@ -56,7 +56,7 @@ void centroids_pick_next_centroid(vector<float>& partial_sums);
 void centroids_duplicates_assign_to_nearest_centroid(vector<pair<vector<int>,int>>& curves_in_range);
 float centroids_calculate_min_distance_curve(vector<double>& curve, string assignment);
 void centroids_calculate_min_distance_input(vector<float>& curves_min_distances, string assignment);
-void centroids_get_hashtable_hashes_frechet(G_Frechet g, vector<vector<int>>& hashes, bool is_mean);
+void centroids_get_hashtable_hashes_frechet(G_Frechet g, vector<vector<int>>& hashes);
 void centroids_get_hashtable_hashes_lsh(G_Lsh g, vector<vector<int>>& hashes);
 void centroids_get_hypercube_hashes(G_Hypercube g, vector<int>& hashes);
 void centroids_clear();
@@ -93,7 +93,7 @@ Curve convert_for_continuous_frechet(const pair<pair<string, int>, vector<double
 vector<pair<int,int>> find_optimal_traversal(const vector<double>& curve1, const vector<double>& curve2);
 pair<pair<string, int>, vector<double>> get_mean_curve(const vector<double>& curve1, const vector<double>& curve2);
 pair<pair<string, int>, vector<double>> get_mean_curve_vector(vector<double> vector_of_sums, int num_of_vectors, int& last_known_id);
-void filter(const vector<double>& curve, double epsilon, int max_length);
+void filter(vector<double>& curve, double epsilon, int max_length);
 
 /*--------------------OPERATIONS BETWEEN VECTORS FUNCTIONS-----------------*/
 int calculate_dot_product(const pair<pair<string, int>, vector<double>>& curve, vector <int>& d_vector);

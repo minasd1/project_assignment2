@@ -5,6 +5,7 @@
 #include "lloyds_auxiliary.h"
 #include "silhouette.h"
 #include "vector_ops.h"
+#include "mean_curve.h"
 
 void k_means_plus_plus(int k, string assignment){
 
@@ -30,9 +31,9 @@ void k_means_plus_plus(int k, string assignment){
 }
 
 //IMPLEMENTATION OF THE LLOYDS ALGORITHM
-void lloyds(int number_of_clusters, fstream& output_file, string assignment, string update, bool complete_flag)
+void lloyds(int number_of_clusters, fstream& output_file, string assignment, string update, double e, int max_length, engine gen, bool complete_flag)
 {
-    int i, dimensions, j;
+    int i, dimensions, j, co;
     int nearest_centroid; //NEAREST CENTROID'S INDEX IN THE centroid TABLE
     int changes_made= 0; //HOW MANY CURVES CHANGED CLUSTER IN A NEW ASSIGNMENT
     pair<pair<string, int>, vector<double>> current_curve;
@@ -59,9 +60,18 @@ void lloyds(int number_of_clusters, fstream& output_file, string assignment, str
 
     //LOOP UNTIL A SMALL PERCENTAGE OF CURVES CHANGE CLUSTER
     //OR THE MAXIMUM NUMBER OF ITERATIONS HAS BEEN REACHED
+    co=0;
     while (change_rate > 0.01) {
         //UPDATE THE CENTROIDS
-        update_as_vector(previous_cluster_table, last_known_id);
+        if (update == "Mean_Vector") {
+            update_as_vector(previous_cluster_table, last_known_id);
+        }
+        else if (update == "Mean_Frechet") {
+            cout << "Update time " << co++ << "with change rate: " << change_rate << endl;
+            update_as_curve(previous_cluster_table, gen, e, max_length, last_known_id);
+            cout << "End of update time " << co-1 << endl;
+        }
+        
         //PREPARE THE NEW CLUSTER TABLE FOR THE NEW CENTROIDS ASSIGNMENT
         changes_made= 0;
         new_cluster_table.clear();
@@ -384,7 +394,6 @@ void reverse_assignment_frechet(G_Frechet g, fstream& output_file, int k, string
     int radius; 
     int last_id = curve_vector_get_size()-1;
     bool first_iteration = true;
-    bool is_mean;
     int new_curves_assigned = 0;
     int previous_curves_assigned = 0;
     int num_of_curves = curve_vector_get_size();
@@ -396,15 +405,9 @@ void reverse_assignment_frechet(G_Frechet g, fstream& output_file, int k, string
     radius = centroids_get_radii();      //SET MINIMUM DISTANCE BETWEEN CENTROIDS DIVIDED BY 2 AS FIRST RADIUS
     
     do{
-        if(first_iteration == true){
-            is_mean = false;
-        }
-        else{
-            is_mean = true;
-        }
-        
+
         //GET EVERY CENTROID'S HASHTABLE BUCKET HASHES
-        centroids_get_hashtable_hashes_frechet(g, hashes, is_mean);
+        centroids_get_hashtable_hashes_frechet(g, hashes);
         
         //FOR EVERY CENTROID
         for(int i = 0; i < centroids_get_size(); i++){
@@ -505,6 +508,40 @@ void update_as_vector(vector<vector<int>>& cluster_table, int& last_known_id){
             centroids_insert_curve(centroids_cp[row]);
         }
 
+    }
+    
+}
+
+//RECEIVES A TABLE OF THE CLUSTERS. EACH ROW CORRESPENDS TO A CLUSTER
+//IN EACH ROW ARE STORED THE IDS OF THE INPUT CURVES THAT BELONG TO THAT CLUSTER
+//RETURNS A TABLE WITH EACH CLUSTER'S NEW CENTROID
+void update_as_curve(vector<vector<int>>& cluster_table, engine gen, double e, int max_length, int& last_known_id){
+    
+    int row, column;  //ITERATORS
+    int dimensions; //THE NUMBER OF COORDINATES AN INPUT CURVE HAS
+    vector<double> coordinates_sum;  //A TABLE OF THE SUMS OF THE 1ST, 2ND, ..., NTH COORDINATE OF THE CURVES IN THE SAME CLUSTER
+    pair<pair<string, int>, vector<double>> current_curve, mean_curve;
+    vector<int> centroids_cp;
+
+    dimensions = curve_vector_get_curve(1).second.size();
+    centroids_cp = centroids_get_table();
+    centroids_clear();
+
+    for (row=0 ; row < cluster_table.size() ; row++) { //FOR EACH CLUSTER
+        
+        //IF THERE IS ONLY ONE CURVE IN THIS BUCKET
+        if (cluster_table[row].size() == 0){
+            centroids_insert_curve(centroids_cp[row]);
+        }
+        //IF THERE ARE MANY CURVES IN THE CLUSTER
+        else if (cluster_table[row].size() > 1) {
+            mean_curve= find_mean_curve_Macchu_Picchu(cluster_table[row].size(), cluster_table[row], gen, e, max_length, last_known_id);
+            curve_vector_insert_curve(mean_curve);
+            centroids_insert_curve(mean_curve.first.second);
+        }
+        else if (cluster_table[row].size() == 1) {
+            centroids_insert_curve(cluster_table[row][0]);
+        }
     }
     
 }

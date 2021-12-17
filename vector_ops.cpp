@@ -318,14 +318,14 @@ void centroids_calculate_min_distance_input(vector<float>& curves_min_distances,
 }
 
 //GET EVERY CENTROID'S HASHTABLE BUCKET HASHES - USING FRECHET HASHING
-void centroids_get_hashtable_hashes_frechet(G_Frechet g, vector<vector<int>>& hashes, bool is_mean){
+void centroids_get_hashtable_hashes_frechet(G_Frechet g, vector<vector<int>>& hashes){
 
     vector<int> hash_vector;
     vector<int> id_vector;
 
     for(int i = 0; i < centroids.size(); i++){
        
-        g.hash(curve_vector_get_curve(centroids[i]), hash_vector, id_vector, true, is_mean, 2);
+        g.hash(curve_vector_get_curve(centroids[i]), hash_vector, id_vector, true, 2);
         hashes.push_back(hash_vector);
 
         hash_vector.clear();
@@ -574,18 +574,19 @@ void print_vector_t(vector<float>& t){
 vector<vector<double>> get_dfd_array(const vector<double>& curve1, const vector<double>& curve2){
     vector<vector<double>> DFD;     //ARRAY THAT KEEPS DISCRETE FRECHET DISTANCE FOR EVERY POSSIBLE TRAVERSAL
     vector<double> point1, point2;  //CURVE POINTS
-    int num_of_points = curve1.size();
+    int num_of_curve1_points = curve1.size();
+    int num_of_curve2_points= curve2.size();
 
-    DFD.resize(num_of_points, vector<double>(num_of_points));
+    DFD.resize(num_of_curve1_points, vector<double>(num_of_curve2_points));
     
     //FOR ALL THE VERTICES OF CURVE 1
-    for(int i = 0; i < num_of_points; i++){
+    for(int i = 0; i < num_of_curve1_points; i++){
         //PAIR THEIR X AND Y VALUES
         point1.push_back(i);
         point1.push_back(curve1[i]);
 
         //FOR ALL THE VERTICES IN CURVE 2
-        for(int j = 0; j < num_of_points; j++){
+        for(int j = 0; j < num_of_curve2_points; j++){
             //DO THE SAME
             point2.push_back(j);
             point2.push_back(curve2[j]);
@@ -617,18 +618,19 @@ double curve_calculate_dfd(const vector<double>& curve1, const vector<double>& c
 
     vector<vector<double>> DFD;     //ARRAY THAT KEEPS DISCRETE FRECHET DISTANCE FOR EVERY POSSIBLE TRAVERSAL
     vector<double> point1, point2;  //CURVE POINTS
-    int num_of_points = curve1.size();
+    int num_of_curve1_points = curve1.size();
+    int num_of_curve2_points= curve2.size();
 
-    DFD.resize(num_of_points, vector<double>(num_of_points));
+    DFD.resize(num_of_curve1_points, vector<double>(num_of_curve2_points));
     
     //FOR ALL THE VERTICES OF CURVE 1
-    for(int i = 0; i < num_of_points; i++){
+    for(int i = 0; i < num_of_curve1_points; i++){
         //PAIR THEIR X AND Y VALUES
         point1.push_back(i);
         point1.push_back(curve1[i]);
 
         //FOR ALL THE VERTICES IN CURVE 2
-        for(int j = 0; j < num_of_points; j++){
+        for(int j = 0; j < num_of_curve2_points; j++){
             //DO THE SAME
             point2.push_back(j);
             point2.push_back(curve2[j]);
@@ -652,7 +654,7 @@ double curve_calculate_dfd(const vector<double>& curve1, const vector<double>& c
         point1.clear();
     }
 
-    return DFD[num_of_points-1][num_of_points-1];
+    return DFD[num_of_curve1_points-1][num_of_curve2_points-1];
 
 }
 
@@ -677,72 +679,100 @@ Curve convert_for_continuous_frechet(const pair<pair<string, int>, vector<double
 //FIND OPTIMAL TRAVERSAL BETWEEN TWO CURVES
 vector<pair<int,int>> find_optimal_traversal(const vector<double>& curve1, const vector<double>& curve2){
 
+    cout << "EDO TO TROO TO SEG" << endl;
     vector<vector<double>> DFD = get_dfd_array(curve1, curve2);
+    cout << "AKYRO DEN TO TROO EDO" << endl;
 
     int min_index;
     vector<double> neighbor_cells;
     vector<pair<int,int>> optimal_traversal;
+    cout << "curve1.size()-1" << endl;
     int i = curve1.size()-1;
+    cout << "curve2.size()-1" << endl;
     int j = curve2.size()-1;
 
     pair<int,int> last_step = make_pair(i, j);
-
+    cout << "444444444" << endl;
     optimal_traversal.push_back(last_step);
-
+    cout << "5555555555" << endl;
     while(i > 0 && j > 0){
+        cout << "6666666" << endl;
         
         neighbor_cells.push_back(DFD[i-1][j]);
+        cout << "7777777777" << endl;
+        cout << "i= " << i << " and j= " << j << endl;
+        cout << "DFD[i][j-1]= " << DFD[i][j-1] << endl;
         neighbor_cells.push_back(DFD[i][j-1]);
+        cout << "8888888888"  << endl;
         neighbor_cells.push_back(DFD[i-1][j-1]);
+        cout << "9999999999"  << endl;
 
         min_index = std::min_element(neighbor_cells.begin(), neighbor_cells.end()) - neighbor_cells.begin();
-        
+
+        cout << "10 10 10 10 10 10 10" << endl;        
         if(min_index == 0){
+            cout << " 11 11 11 11 11" << endl;
             optimal_traversal.push_back(make_pair(--i, j));
+            cout << "12 12 12 12 12" << endl;
         }
         else if(min_index == 1){
+            cout << "13 13 13 13 13 13 13"  << endl;
             optimal_traversal.push_back(make_pair(i,--j));
+            cout << "14 14 14 14 14 14" << endl;
         }
         else{
+            cout << "16" << endl;
             optimal_traversal.push_back(make_pair(--i,--j));
+            cout << "17" << endl;
         }
+        cout << "18" << endl;
 
         neighbor_cells.clear();
-
+        cout << "19" << endl;
     }
-    
+    cout << "20" << endl;
     if(i == 0 && j > 0){
-        
+        cout << "21" << endl;
         while(j > 0){
+            cout << "22" << endl;
             optimal_traversal.push_back(make_pair(i, --j));
+            cout << "23" << endl;
         }
         
     }
     else if(i > 0 && j == 0){
-        
+        cout << "24" << endl;
         while(i > 0){
+            cout << "25" << endl;
            optimal_traversal.push_back(make_pair(--i, j)); 
+           cout << "26" << endl;
         }
     }
-
+    cout << "27" << endl;
     return optimal_traversal;
 }
 
-//GET MEAN CURVE BETWEEN TWO CURVES - FRECHET
+//GET MEAN CURVE BETWEEN TWO CURVES
 pair<pair<string, int>, vector<double>> get_mean_curve(const vector<double>& curve1, const vector<double>& curve2){
 
     pair<pair<string, int>, vector<double>> mean_curve;
     double mean_value;
     int count = 0;
 
+    cout << "FIND OPTIMAL" << endl;
     vector<pair<int,int>> optimal_traversal = find_optimal_traversal(curve1, curve2);
+    cout << "FIND OPTIMAL DONE!" << endl;
     mean_curve.second.resize(optimal_traversal.size());
     
+    cout << "00000000000" << endl;
     for(int i = optimal_traversal.size()-1; i >=0; i--){
+        cout << "1111111111" << endl;
 
         mean_value = (curve1[optimal_traversal[i].first] + curve2[optimal_traversal[i].second])/2;
+        cout << "1.5  1.5   1.5   1.5" << endl;
         mean_curve.second[count] = mean_value;
 
+        cout << "2222222222" << endl;
         count++;
     }
 
@@ -767,32 +797,32 @@ pair<pair<string, int>, vector<double>> get_mean_curve_vector(vector<double> vec
 //FILTER A CURVE TO HAVE A PREDEFINED SIZE
 void filter(vector<double>& curve, double epsilon, int max_length){
 
-    vector<double> filtered_curve;
+    while(curve.size() > max_length){
 
-    filtered_curve.push_back(curve[0]);
+        for(int i = 1; i < curve.size() - 1; i++){
 
-    for(int i = 1; i < curve.size() - 1; i++){
-
-        if((abs(curve[i-1] - curve[i]) > epsilon) || (abs(curve[i] - curve[i+1]) > epsilon)){
-                
-            if(filtered_curve.size() < max_length){
-
-                filtered_curve.push_back(curve[i]);
+            if(curve.size() > max_length){
+                if((abs(curve[i-1] - curve[i]) <= epsilon) && (abs(curve[i] - curve[i+1]) <= epsilon)){
+                    curve.erase(curve.begin() + i);
+                }
             }
+            else{
+                break;
+            }
+            
         }
-        
-    }
 
-    filtered_curve.push_back(curve[curve.size() - 1]);
+        if(curve.size() > max_length){
+            epsilon = epsilon*2;
+        }
+        else{
 
-    curve.clear();
-
-    for(int i = 0; i < filtered_curve.size(); i++){
-        
-        curve.push_back(filtered_curve[i]);
+            break;
+        }
     }
 
 }
+
 
 //CALCULATE DOT PRODUCT OF TWO VECTORS
 int calculate_dot_product(const pair<pair<string, int>, vector<double>>& curve, vector <int>& d_vector){
