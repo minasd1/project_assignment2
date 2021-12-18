@@ -37,9 +37,8 @@ int main(int argc, char* argv[]){
     int M_cube=1000 ;                    //MAX NUMBER OF CANDIDATE POINTS TO BE CHECKED
     int window= 50;                
     int k_cluster ;                 //NUMBER OF CENTROIDS - CLUSTERING
-    double delta = 2.5;
+    double delta = 0.7;             //experiments done
     double epsilon = 0.1;
-    bool complete= false;
 
     fstream input_file;             //FILE WE READ INPUT FROM
     fstream query_file;             //FILE WE READ QUERIES FROM
@@ -80,7 +79,6 @@ int main(int argc, char* argv[]){
     query_max_value = 0.0;
     is_query_curve = true;
     first_iteration = true;
-    complete= false;
     new_query_file = false;
     flag_frechet_cluster = false;
     is_mean_curve = true;
@@ -159,11 +157,10 @@ int main(int argc, char* argv[]){
         read_configuration_file(config_file, config_file_name, k_cluster, L, k, M_cube, k_cube, probes);
         if((assignment == "Classic" && update == "Mean_Frechet") || (assignment == "LSH_Frechet")){
             //V VECTORS IN LSH MUBT HAVE THE SAME SIZE AS THE CONCATENATED CURVE VECTOR
-            factor = 4;
+            factor = 8;//experiments done
 
-            // extra_values_factor = 2;
             flag_frechet_cluster = true;
-            max_mean_curve_length= 4 * num_of_curve_values;
+            max_mean_curve_length= num_of_curve_values; //experiments done
         }
     }
 
@@ -198,11 +195,11 @@ int main(int argc, char* argv[]){
         //INITIALIZE L HASHTABLES WITH HASHTABLESIZE BUCKETS AND ZERO POINTS IN EACH BUCKET
         hashTable_initialization(L, buckets);
 
-        if((algorithm == "Frechet")){
+        if((algorithm == "Frechet" || assignment == "LSH_Frechet")){
 
             //INSERT ALL INPUT CURVES TO THE HASHTABLES
             for(int i = 0; i < number_of_curves; i++){
-                if(metric == "discrete"){
+                if(metric == "discrete" || assignment == "LSH_Frechet"){
 
                     g_frechet.hash(curve_vector_get_curve(i), hash_vector, id_vector, !is_query_curve, !is_mean_curve, 2);
                 }
@@ -224,7 +221,7 @@ int main(int argc, char* argv[]){
             }
             hash_vector.clear();
         }
-        else if (algorithm == "Hypercube") {
+        else if (algorithm == "Hypercube" || assignment == "Hypercube") {
             //INITIALIZE A HYPERCUBE WITH 2^D' BUCKETS AND ZERO POINTS IN EACH BUCKET
             hyperCube_initialization(pow(2, k_cube));
 
@@ -468,8 +465,18 @@ int main(int argc, char* argv[]){
                 
             
             else if(assignment == "LSH"){
+                cout << "edo to efaga" << endl;
+                reverse_assignment_lsh(g_lsh, output_file, k_cluster, assignment, update, complete_flag);
+                cout << "ligh ipomonh" << endl;
+            }
+            else if(assignment == "Hypercube"){
 
-                reverse_assignment_lsh(g_lsh, output_file, k_cluster, assignment, update, false);
+                reverse_assignment_cube(g_cube, output_file, k_cluster, probes, assignment, update, complete_flag);
+            }
+            else if(assignment == "LSH_Frechet"){
+
+                reverse_assignment_frechet(g_frechet, output_file, k_cluster, assignment, epsilon, 
+                                            max_mean_curve_length, generator, complete_flag);
             }
             
 

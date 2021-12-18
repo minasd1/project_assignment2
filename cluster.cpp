@@ -61,15 +61,15 @@ void lloyds(int number_of_clusters, fstream& output_file, string assignment, str
     //LOOP UNTIL A SMALL PERCENTAGE OF CURVES CHANGE CLUSTER
     //OR THE MAXIMUM NUMBER OF ITERATIONS HAS BEEN REACHED
     co=0;
-    while (change_rate > 0.01) {
+    while (change_rate > 0.1) {
         //UPDATE THE CENTROIDS
         if (update == "Mean_Vector") {
             update_as_vector(previous_cluster_table, last_known_id);
         }
         else if (update == "Mean_Frechet") {
-            cout << "Update time " << co++ << "with change rate: " << change_rate << endl;
+            // cout << "Update time " << co++ << "with change rate: " << change_rate << endl;
             update_as_curve(previous_cluster_table, gen, e, max_length, last_known_id);
-            cout << "End of update time " << co-1 << endl;
+            // cout << "End of update time " << co-1 << endl;
         }
         
         //PREPARE THE NEW CLUSTER TABLE FOR THE NEW CENTROIDS ASSIGNMENT
@@ -80,8 +80,10 @@ void lloyds(int number_of_clusters, fstream& output_file, string assignment, str
         //MAKE A NEW ASSIGNMENT FOR ALL THE CURVES
         for (i=0 ; i < num_of_curves ; i++) { //FOR EVERY CURVE
             current_curve= curve_vector_get_curve(i);
+            // cout << "waiting here" << endl;
+            // cout << "current curve is" << i << endl;
             nearest_centroid= find_nearest_centroid(current_curve, update);
-            
+            // cout << "maybe waiting here" << endl;
             //IF A CURVE IS BEING ASSIGNED IN A DIFFERENT CLUSTER THAN THE ONE IT WAS ASSIGNED IN THE PREVIOUS ASSIGNMENT
             if (!already_in_that_cluster(previous_cluster_table, nearest_centroid, current_curve.first.second)) {
                 changes_made++;
@@ -194,8 +196,9 @@ void reverse_assignment_lsh(G_Lsh g, fstream& output_file, int k, string assignm
     vector<pair<vector<int>,int>> curves_in_range; //ALL THE CURVES THAT ARE INSIDE THE GIVEN RADIUS FROM EVERY CENTROID
     vector<vector<int>> cluster_table;   //TABLE WITH ALL THE CURVES IN EACH CLUSTER
     vector<vector<int>> hashes;          //INDEXES THAT LEAD CENTROIDS TO HASHTABLE BUCKETS
-    vector<int> current_point;
+    pair<pair<string, int>, vector<double>> current_curve;
     int radius; 
+    int i,j;
     int last_id = curve_vector_get_size()-1;
     bool first_iteration = true;
     int new_curves_assigned = 0;
@@ -283,6 +286,38 @@ void reverse_assignment_lsh(G_Lsh g, fstream& output_file, int k, string assignm
     //WHEN THE CLUSTERS HAVE BEEN DEFINITIVELY FORMED STOP COUNTING TIME
     auto stop_time = std::chrono::high_resolution_clock::now();
 
+    //PRINT THE RESULTS
+    output_file << "Algorithm: LSH" << endl;
+    for (i= 0 ; i < centroids_get_size() ; i++) {
+        output_file << "CLUSTER-" << i+1 << " {size: " << cluster_table[i].size();
+        output_file << " centroid: ";
+        current_curve= curve_vector_get_curve(centroids_get_centroid(i));
+        for (j=0 ; j < complexity ; j++) {
+            output_file <<  current_curve.second[j]<< " ";
+        }
+        output_file << "}" << endl;
+    }
+    auto time_passed = std::chrono::duration_cast<std::chrono::seconds>(stop_time - start_time);
+    output_file << "clustering_time: " << time_passed.count() << " seconds" << endl;
+    output_file << "Silhouette: ";
+    print_silhouette(cluster_table, output_file, update);
+    if (complete_flag) {
+        for(i=0 ; i < centroids_get_size() ; i++) {
+            output_file << "CLUSTER-" << i+1 << " {size: " << cluster_table[i].size();
+            output_file << " centroid: [";
+            current_curve= curve_vector_get_curve(centroids_get_centroid(i));
+            for (j=0 ; j < complexity ; j++) {
+                output_file << current_curve.second[j] << " ";
+            }
+            output_file << "]";
+            output_file << ", ";
+            for (j= 0; j < cluster_table[i].size(); j++) {
+                output_file << cluster_table[i][j] << " ";
+            }
+            output_file << "}" << endl;
+        }
+    }
+
 }
 
 void reverse_assignment_cube(G_Hypercube g, fstream& output_file, int k, int probes, string assignment, string update, bool complete_flag){
@@ -292,8 +327,9 @@ void reverse_assignment_cube(G_Hypercube g, fstream& output_file, int k, int pro
     vector<pair<vector<int>,int>> curves_in_range; //ALL THE CURVES THAT ARE INSIDE THE GIVEN RADIUS FROM EVERY CENTROID
     vector<vector<int>> cluster_table;   //TABLE WITH ALL THE CURVES IN EACH CLUSTER
     vector<int> hashes;          //INDEXES THAT LEAD CENTROIDS TO HASHTABLE BUCKETS
-    vector<int> current_point;
+    pair<pair<string, int>, vector<double>> current_curve;
     int radius; 
+    int i,j;
     int last_id = curve_vector_get_size()-1;
     bool first_iteration = true;
     int new_curves_assigned = 0;
@@ -372,31 +408,65 @@ void reverse_assignment_cube(G_Hypercube g, fstream& output_file, int k, int pro
 
     }while(1);
 
-    //WHEN THE CLUSTERS HAVE BEEN DEFINITIVELY FORMED STOP COUNTING TIME
-    auto stop_time = std::chrono::high_resolution_clock::now();
-
     //IF THERE ARE MORE CURVES TO BE ASSIGNED
     if(is_assigned_count_assigned() < num_of_curves){
         //ASSIGN THE REST OF THE POINTS THAT HAVE NOT BEEN ASSIGNED TO CLUSTERS USING LLOYD'S ALGORITHM
         reverse_assignment_lloyds(cluster_table, k, num_of_curves, last_id, update);
     }
 
+    //WHEN THE CLUSTERS HAVE BEEN DEFINITIVELY FORMED STOP COUNTING TIME
+    auto stop_time = std::chrono::high_resolution_clock::now();
+
+    //PRINT THE RESULTS
+    output_file << "Algorithm: Hypercube" << endl;
+    for (i= 0 ; i < centroids_get_size() ; i++) {
+        output_file << "CLUSTER-" << i+1 << " {size: " << cluster_table[i].size();
+        output_file << " centroid: ";
+        current_curve= curve_vector_get_curve(centroids_get_centroid(i));
+        for (j=0 ; j < complexity ; j++) {
+            output_file <<  current_curve.second[j]<< " ";
+        }
+        output_file << "}" << endl;
+    }
+    auto time_passed = std::chrono::duration_cast<std::chrono::seconds>(stop_time - start_time);
+    output_file << "clustering_time: " << time_passed.count() << " seconds" << endl;
+    output_file << "Silhouette: ";
+    print_silhouette(cluster_table, output_file, update);
+    if (complete_flag) {
+        for(i=0 ; i < centroids_get_size() ; i++) {
+            output_file << "CLUSTER-" << i+1 << " {size: " << cluster_table[i].size();
+            output_file << " centroid: [";
+            current_curve= curve_vector_get_curve(centroids_get_centroid(i));
+            for (j=0 ; j < complexity ; j++) {
+                output_file << current_curve.second[j] << " ";
+            }
+            output_file << "]";
+            output_file << ", ";
+            for (j= 0; j < cluster_table[i].size(); j++) {
+                output_file << cluster_table[i][j] << " ";
+            }
+            output_file << "}" << endl;
+        }
+    }
+
 }
 
-void reverse_assignment_frechet(G_Frechet g, fstream& output_file, int k, string assignment, bool complete_flag){
+void reverse_assignment_frechet(G_Frechet g, fstream& output_file, int k, string assignment, double e, int max_length, engine gen, bool complete_flag){
 
     pair<pair<string, int>, vector<double>> centroid; //HERE CENTROIDS ARE THE QUERY POINTS
     vector<int> appending_curves;        //NEW CURVES THAT WILL BE ADDED TO CLUSTERS   
     vector<pair<vector<int>,int>> curves_in_range; //ALL THE CURVES THAT ARE INSIDE THE GIVEN RADIUS FROM EVERY CENTROID
     vector<vector<int>> cluster_table;   //TABLE WITH ALL THE CURVES IN EACH CLUSTER
     vector<vector<int>> hashes;          //INDEXES THAT LEAD CENTROIDS TO HASHTABLE BUCKETS
-    vector<int> current_point;
+    pair<pair<string, int>, vector<double>> current_curve;
     int radius; 
+    int i,j;
     int last_id = curve_vector_get_size()-1;
     bool first_iteration = true;
     bool is_mean;
     int new_curves_assigned = 0;
     int previous_curves_assigned = 0;
+    string update = "Mean_Frechet";
     int num_of_curves = curve_vector_get_size();
     int complexity = curve_vector_get_curve(0).second.size(); //COMPLEXITY OF CURVES //dimensions previously
 
@@ -472,13 +542,54 @@ void reverse_assignment_frechet(G_Frechet g, fstream& output_file, int k, string
 
         previous_curves_assigned = new_curves_assigned;
 
+        //UPDATE THE CENTROIDS
+        update_as_curve(cluster_table, gen, e, max_length, last_id);
+
         first_iteration = false;
 
 
     }while(1);
 
+    //IF THERE ARE MORE CURVES TO BE ASSIGNED
+    if(is_assigned_count_assigned() < num_of_curves){
+        //ASSIGN THE REST OF THE POINTS THAT HAVE NOT BEEN ASSIGNED TO CLUSTERS USING LLOYD'S ALGORITHM
+        reverse_assignment_lloyds(cluster_table, k, num_of_curves, last_id, update);
+    }
+
     //WHEN THE CLUSTERS HAVE BEEN DEFINITIVELY FORMED STOP COUNTING TIME
     auto stop_time = std::chrono::high_resolution_clock::now();
+
+    //PRINT THE RESULTS
+    output_file << "Algorithm: LSH_Frechet" << endl;
+    for (i= 0 ; i < centroids_get_size() ; i++) {
+        output_file << "CLUSTER-" << i+1 << " {size: " << cluster_table[i].size();
+        output_file << " centroid: ";
+        current_curve= curve_vector_get_curve(centroids_get_centroid(i));
+        for (j=0 ; j < complexity ; j++) {
+            output_file <<  current_curve.second[j]<< " ";
+        }
+        output_file << "}" << endl;
+    }
+    auto time_passed = std::chrono::duration_cast<std::chrono::seconds>(stop_time - start_time);
+    output_file << "clustering_time: " << time_passed.count() << " seconds" << endl;
+    output_file << "Silhouette: ";
+    print_silhouette(cluster_table, output_file, update);
+    if (complete_flag) {
+        for(i=0 ; i < centroids_get_size() ; i++) {
+            output_file << "CLUSTER-" << i+1 << " {size: " << cluster_table[i].size();
+            output_file << " centroid: [";
+            current_curve= curve_vector_get_curve(centroids_get_centroid(i));
+            for (j=0 ; j < complexity ; j++) {
+                output_file << current_curve.second[j] << " ";
+            }
+            output_file << "]";
+            output_file << ", ";
+            for (j= 0; j < cluster_table[i].size(); j++) {
+                output_file << cluster_table[i][j] << " ";
+            }
+            output_file << "}" << endl;
+        }
+    }
 
 }
 

@@ -62,9 +62,9 @@ void create_base_layer (engine gen, const int& floors_to_the_peak, const vector<
     //CREATE PAIRS OF INTEGERS {TABLE_INDEX, VALUE} , WHERE TABLE_INDEX=[0, 1, ...], VALUE=[RANDOM(0,limit)]
     //AND SORT THEM ACCORDING TO THE SECOND OF THE PAIR (THE RANDOM VALUE)
     //GOAL IS TO MIX UP THE TABLE_INDEXES (E.G. INSTEAD OF [0,1,2,3,4,5] ---> [3,5,1,4,2,0])
-    cout << "curves_base_size= "<< curves[floors_to_the_peak].size() << endl;
+  
     for (i= 0 ; i < cluster.size() ; i++) {
-        cout << "create pair " << i << endl;
+      
         current_pair.first= i;
         current_pair.second= distribution(gen);
 
@@ -72,12 +72,6 @@ void create_base_layer (engine gen, const int& floors_to_the_peak, const vector<
     }
     //SORTING THE PAIRS BY SECOND INTEGER ASCENDING ORDER
     sort(pairs.begin(), pairs.end(), compare_distance);
-
-    cout << "Sorted pairs " << endl;
-    for (i= 0; i < curves[floors_to_the_peak]. size() ; i++) {
-        cout << pairs[i].first << " "; 
-    }
-    cout << endl;
 
     //INITIALIZE THE BASE LAYER WITH EMPTY POSITIONS
     for (i= 0;  i < curves[floors_to_the_peak].size() ; i++) {
@@ -93,11 +87,11 @@ void create_base_layer (engine gen, const int& floors_to_the_peak, const vector<
     //     PAIRS_TABLE: [{4,120}, {18, 140}, {3, 149}, ...]
     //     THEN curve1 GOES TO curves[base_layer][4], curve2 TO curves[curve's_cluster][18] AND SO ON
     for (i= 0 ; i < cluster.size() ; i++) {
-        //cout << "Take curve " << i << endl;
+       
         current_curve= curve_vector_get_curve(cluster[i]); //TAKE THE iTH CURVE OF THE CLUSTER
-        //cout << "Taken!" << endl;
+      
         curves[floors_to_the_peak][pairs[i].first]= current_curve;
-        //cout << "Saved" << endl;
+       
     }
 } 
 
@@ -108,38 +102,34 @@ pair<pair<string,int>, vector<double>> reach_the_peak (const int& floors_to_the_
     pair <pair<string, int>, vector<double>> mean_curve;
 
     for (i= floors_to_the_peak ; i > 0 ; i--) {
+        // cout << "Current Level is" << floors_to_the_peak-i << endl;
         for (j= 0 ; j < curves[i].size() ; j+=2) {
             //IF BOTH CURVES EXIST
             if (curves[i][j].first.first != "NULL" && curves[i][j+1].first.first != "NULL") {
-                cout << "BOTH VALID" << endl;
+                
                 mean_curve= get_mean_curve(curves[i][j].second,  curves[i][j+1].second);
                 if (mean_curve.second.size() > max_length) {
                     filter(mean_curve.second, e,  max_length);
                 } 
                 curves[i-1][j/2]= mean_curve;
-                cout << "\n\nLENGHT: " << curves[i-1][j/2].second.size() << "\n\n" << endl;
-                cout << "BOTH VALID DONE" << endl;
+                // cout << "\n\nLENGHT: " << curves[i-1][j/2].second.size() << "\n\n" << endl;
+              
                 curves[i-1][j/2].first.first= "MEAN";
                 
             }
             //IF BOTH ARE EMPTY
             else if (curves[i][j].first.first == "NULL" && curves[i][j+1].first.first == "NULL") {
-                cout << "NONE VALID" << endl;
+             
                 curves[i-1][j/2].first.first= "NULL";
-                cout << "NONE VALID DONE" << endl;
+             
             }
             //IF THE LEFT CURVE EXISTS AND THE RIGHT IS EMPTY
             else if (curves[i][j].first.first != "NULL" && curves[i][j+1].first.first == "NULL"){ 
-                cout << "LEFT VALID" << endl;
+             
                 curves[i-1][j/2]= curves[i][j];
-                cout << "LEFT VALID DONE" << endl;
+             
             }
-            //IF THE RIGHT CURVE EXISTS AND THE LEFT IS EMPTY
-            else if (curves[i][j].first.first == "NULL" && curves[i][j+1].first.first != "NULL"){ 
-                cout << "RIGHT VALID" << endl;
-                curves[i-1][j/2]= curves[i][j+1];
-                cout << "RIGHT VALID DONE" << endl;
-            }
+            
         }
         curves[i].clear();
     }

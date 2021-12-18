@@ -200,7 +200,7 @@ G_Frechet::G_Frechet(G_Lsh g_func, engine gen, int L_num, double delta_value, do
     }
 
     if(flag_frechet_cluster == true){
-        extra_values_factor = 2;
+        extra_values_factor = 1;
         max_length = 2 * num_of_curve_values * extra_values_factor;
     }
     else{
