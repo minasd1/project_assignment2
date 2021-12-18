@@ -49,13 +49,15 @@ int main(int argc, char* argv[]){
     string line, token, algorithm, metric, name, assignment, update;
     string input_file_name, query_file_name, output_file_name, config_file_name;
    
-    int start, finish, buckets, id, count, M, num_of_curve_values, 
+    int start, finish, buckets, id, count, M, num_of_curve_values, error,
         query_num_of_curve_values, continue_execution, sum_approximate_time, 
         sum_exact_time, query_curves_counted, factor, max_mean_curve_length; 
     
     int curves_divider = 16;        //USED TO GET TOTAL CURVES IN EACH HASHTABLE
     
-    bool is_query_curve, is_mean_curve, first_iteration, complete_flag, new_query_file, flag_frechet_cluster;
+    bool is_query_curve, is_mean_curve, first_iteration, complete_flag, new_query_file, 
+         flag_frechet_cluster, datapath_given, query_given, output_given, algorithm_given,
+         metric_given;
 
     unsigned int hash_value, number_of_curves ;
  
@@ -83,9 +85,18 @@ int main(int argc, char* argv[]){
     flag_frechet_cluster = false;
     is_mean_curve = true;
 
-    read_cmd_args(argc, argv, input_file_name, query_file_name, k, k_cube, L, output_file_name, 
+    error= read_cmd_args(argc, argv, input_file_name, query_file_name, k, k_cube, L, output_file_name, 
                   N, R, M_cube, probes, config_file_name, assignment, complete_flag, algorithm, 
-                  metric, delta, update);
+                  metric, delta, update, datapath_given, query_given, output_given, algorithm_given,
+                  metric_given);
+
+    if (error) {
+        return -1;
+    }
+                
+    read_path(input_file_name, query_file_name, output_file_name, algorithm, metric, 
+                   datapath_given, query_given, output_given, algorithm_given, metric_given);
+    cout << "Input: " << input_file_name << endl << "output: " << output_file_name << endl;
 
     unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
     default_random_engine generator(seed);

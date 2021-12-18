@@ -8,20 +8,21 @@ using namespace std;
 int read_cmd_args(int argc, char** argv, string& input_file, string& query_file,
                       int& k_lsh, int& k_cube, int& l, string& output_file, int& n,
                       float& r, int& m, int& probes, string& config_file, string& assignment,
-                      bool& complete_flag, string& algorithm, string& metric, double& delta, string& update)
+                      bool& complete_flag, string& algorithm, string& metric, double& delta, 
+                      string& update, bool& datapath_given, bool& query_given, bool& output_given, 
+                      bool& algorithm_given, bool& metric_given)
 {
     int i;
-    bool input_file_flag, k_lsh_flag, k_cube_flag, l_flag, output_file_flag, query_file_flag, 
-         n_flag, r_flag, probes_flag, algorithm_flag, metric_flag, delta_flag, m_flag, c_flag, 
+    bool k_lsh_flag, k_cube_flag, l_flag, n_flag, r_flag, probes_flag, delta_flag, m_flag, c_flag, 
          method_flag, assignment_flag, update_flag;
 
     //Flags for given arguments (false for missing args)
-    input_file_flag= false;
+    datapath_given= false;
     k_lsh_flag= false;
     k_cube_flag= false;
     l_flag= false;
-    output_file_flag= false;
-    query_file_flag= false;
+    output_given= false;
+    query_given= false;
     n_flag= false;
     r_flag= false;
     probes_flag= false;
@@ -29,19 +30,19 @@ int read_cmd_args(int argc, char** argv, string& input_file, string& query_file,
     c_flag= false;
     assignment_flag= false;
     complete_flag= false;
-    algorithm_flag= false;
-    metric_flag= false;
+    algorithm_given= false;
+    metric_given= false;
     delta_flag= false;
     update_flag= false;
 
 
     for (i=1; i < argc ; i+=2) { //For every other argument
         if((string)argv[i] == "-i"){
-            input_file_flag= true;
+            datapath_given= true;
             input_file= argv[i+1];
         }
         else if((string)argv[i] == "-q" ) {
-            query_file_flag= true;
+            query_given= true;
             query_file= argv[i+1];
         }
         else if((string)argv[i] == "-k") {
@@ -55,7 +56,7 @@ int read_cmd_args(int argc, char** argv, string& input_file, string& query_file,
             l= stoi(argv[i+1]);
         }
         else if((string)argv[i] == "-o") {
-            output_file_flag= true;
+            output_given= true;
             output_file= argv[i+1];
         }
         else if((string)argv[i] == "-N") {
@@ -75,11 +76,11 @@ int read_cmd_args(int argc, char** argv, string& input_file, string& query_file,
             probes= stoi(argv[i+1]);
         }
         else if((string)argv[i] == "-algorithm") {
-            algorithm_flag= true;
+            algorithm_given= true;
             algorithm= argv[i+1];
         }
         else if((string)argv[i] == "-metric") {
-            metric_flag= true;
+            metric_given= true;
             metric= argv[i+1];
         }
         else if((string)argv[i] == "-delta") {
@@ -131,10 +132,10 @@ int read_cmd_args(int argc, char** argv, string& input_file, string& query_file,
         }
     }
 
-    if (!algorithm_flag && (string)argv[0] == "./search") {
+    /*if (!algorithm_flag && (string)argv[0] == "./search") {
         cerr << "Algorithm not defined!" << endl;
         return -1;
-    }
+    }*/
     if (!assignment_flag && (string)argv[0] == "./cluster"){
         cerr << "Assignment method not defined!" << endl;
         return -1;
@@ -145,7 +146,6 @@ int read_cmd_args(int argc, char** argv, string& input_file, string& query_file,
     }
     
     if ((string)argv[0] == "search") {
-        if (input_file_flag && query_file_flag) {
             //Initialize missing arguments with default values
             if (!k_lsh_flag)
                 k_lsh= 4;
@@ -161,24 +161,12 @@ int read_cmd_args(int argc, char** argv, string& input_file, string& query_file,
                 m= 10;
             if (!probes_flag )
                 probes= 2;
-            if (!output_file_flag)
-                output_file= "output_file";
-            if (!input_file_flag)
-                input_file= "NULL";
-            if (!query_file_flag)
-                query_file= "NULL";
             return 0;
-        }
     }
-    /*else if ((string)argv[0] == "./cluster"){
-        if (!i_flag || !method_flag || !c_flag) {
-            cerr << "At least one of the following is missing: ";
-            cerr << "(Input file, Configuration file, Method)" << endl;
-            cerr << "Please run the program as below:\n" << endl;
-            cerr << "./cluster -i <input_file> -c <configuration_file> -m <Classic OR LSH or Hypercube>" << endl;
-            return -1;
-        }
-        else {
+    else if ((string)argv[0] == "./cluster"){
+            metric_given= true;
+            query_given= true;
+            algorithm_given= true;
             //INITIALIZE LSH AND HYPERCUBE ARGUMENTS WITH THE DEFAULT VALUES
             l= 3;
             k_lsh= 4;
@@ -186,10 +174,7 @@ int read_cmd_args(int argc, char** argv, string& input_file, string& query_file,
             m= 10;
             probes= 2;
             n= 1;
-            if (!o_flag) {
-                output_file= "output_file";
-            }
-        }
-    }*/
+            
+    }
     return 0;
 }

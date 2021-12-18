@@ -53,3 +53,44 @@ void read_user_input(string& query_file, int* continue_execution){
     }
 
 }
+
+void read_path(string& dataset_path, string& queryset_path, string& output_file, string& algorithm, 
+               string& metric, bool datapath_given, bool query_given, bool output_given, 
+               bool algorithm_given, bool metric_given)
+{
+    if (!datapath_given) {
+        cout << endl << "Please insert the path to the dataset: ";
+        cin >> dataset_path;
+        getchar();
+    }
+    if (!query_given) {
+        cout << endl << "Please insert the path to the queryset: ";
+        cin >> queryset_path;
+        getchar();
+    }
+    if (!output_given) {
+        cout << endl << "Please insert the output file: ";
+        cin >> output_file;
+        getchar();
+    }
+    if (!algorithm_given) {
+        cout << endl << "Please insert the algorithm (LSH, Hypercube, Frechet): ";
+        cin >> algorithm;
+        getchar();
+        while (algorithm != "LSH" && algorithm != "Hypercube" && algorithm != "Frechet") {
+            cout << "Please insert a valid algorithm (LSH, Hypercube, Frechet): ";
+            cin >> algorithm;
+            getchar();
+        }
+    }
+    if (!metric_given) {
+        cout << endl << "Please insert the metric (discrete, continuous): ";
+        cin >> metric;
+        getchar();
+        while (metric != "discrete" && metric != "continuous") {
+            cout << "Please insert a valid metric (discrete, continuous): ";
+            cin >> metric;
+            getchar();
+        }
+    }
+}
