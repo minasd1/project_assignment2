@@ -401,7 +401,7 @@ int main(int argc, char* argv[]){
                     auto stop_time2 = std::chrono::high_resolution_clock::now();
                     auto time_brute = std::chrono::duration_cast<std::chrono::microseconds>(stop_time2 - start_time2);
                     //PRINTING IN OUTPUT FILE
-                    output_file << "Query: " << query_curve.first.second << endl;
+                    output_file << "Query: " << query_curve.first.first << endl;
                     if(metric == "discrete"){
                         output_file << "Algorithm: LSH_Frechet_Discrete" << endl;
                     }

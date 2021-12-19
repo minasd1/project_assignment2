@@ -83,7 +83,7 @@ void read_path(string& dataset_path, string& queryset_path, string& output_file,
             getchar();
         }
     }
-    if (!metric_given) {
+    if (!metric_given && (algorithm == "Frechet" || algorithm == "frechet")) {
         cout << endl << "Please insert the metric (discrete, continuous): ";
         cin >> metric;
         getchar();
