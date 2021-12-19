@@ -131,7 +131,11 @@ int read_cmd_args(int argc, char** argv, string& input_file, string& query_file,
                 return -1;
             }
         }
-        else if((string)argv[i] == "-update") {
+        else if((string)argv[i] == "-update" && ((string) argv[i+1] != "Mean_Frechet" || (string) argv[i+1] != "Mean_Vector" )) {
+            cerr << "Please give the update method using one word (Mean_Frechet or Mean_Vector)" << endl;
+            return -1;
+        }
+        else if ((string) argv[i] == "-update" ) {
             update_flag= true;
             update= argv[i+1];
         }
