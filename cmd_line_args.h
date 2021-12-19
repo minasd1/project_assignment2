@@ -9,5 +9,5 @@ int read_cmd_args(int argc, char** argv, string& input_file, string& query_file,
                       float& r, int& m, int& probes, string& config_file, string& assignment, 
                       bool& complete_flag, string& algorithm, string& metric, double& delta, 
                       string& update, bool& datapath_given, bool& query_given, bool& output_given, 
-                      bool& algorithm_given, bool& metric_given);
+                      bool& algorithm_given, bool& metric_given, bool& sihlouette_flag);
 #endif

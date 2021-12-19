@@ -56,7 +56,7 @@ int main(int argc, char* argv[]){
     
     bool is_query_curve, is_mean_curve, first_iteration, complete_flag, new_query_file, 
          flag_frechet_cluster, datapath_given, query_given, output_given, algorithm_given,
-         metric_given;
+         metric_given, sihlouette_flag;
 
     unsigned int hash_value, number_of_curves ;
  
@@ -86,7 +86,7 @@ int main(int argc, char* argv[]){
     error= read_cmd_args(argc, argv, input_file_name, query_file_name, k, k_cube, L, output_file_name, 
                   N, R, M_cube, probes, config_file_name, assignment, complete_flag, algorithm, 
                   metric, delta, update, datapath_given, query_given, output_given, algorithm_given,
-                  metric_given);
+                  metric_given, sihlouette_flag);
 
     if (error) {
         return -1;
@@ -94,7 +94,7 @@ int main(int argc, char* argv[]){
                 
     read_path(input_file_name, query_file_name, output_file_name, algorithm, metric, 
                    datapath_given, query_given, output_given, algorithm_given, metric_given);
-    cout << "Input: " << input_file_name << endl << "output: " << output_file_name << endl;
+    //cout << "Input: " << input_file_name << endl << "output: " << output_file_name << endl;
 
     unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
     default_random_engine generator(seed);
@@ -460,14 +460,10 @@ int main(int argc, char* argv[]){
             if (assignment == "Classic") {
 
                      lloyds(k_cluster, output_file, assignment, update, 
-                     epsilon, max_mean_curve_length, generator, complete_flag);
-                }
-                
-            
+                     epsilon, max_mean_curve_length, generator, complete_flag, sihlouette_flag);
+            }
             else if(assignment == "LSH"){
-                cout << "edo to efaga" << endl;
                 reverse_assignment_lsh(g_lsh, output_file, k_cluster, assignment, update, complete_flag);
-                cout << "ligh ipomonh" << endl;
             }
             else if(assignment == "Hypercube"){
 

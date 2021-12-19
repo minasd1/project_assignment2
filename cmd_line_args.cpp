@@ -10,7 +10,7 @@ int read_cmd_args(int argc, char** argv, string& input_file, string& query_file,
                       float& r, int& m, int& probes, string& config_file, string& assignment,
                       bool& complete_flag, string& algorithm, string& metric, double& delta, 
                       string& update, bool& datapath_given, bool& query_given, bool& output_given, 
-                      bool& algorithm_given, bool& metric_given)
+                      bool& algorithm_given, bool& metric_given, bool& sihlouette_flag)
 {
     int i;
     bool k_lsh_flag, k_cube_flag, l_flag, n_flag, r_flag, probes_flag, delta_flag, m_flag, c_flag, 
@@ -34,6 +34,7 @@ int read_cmd_args(int argc, char** argv, string& input_file, string& query_file,
     metric_given= false;
     delta_flag= false;
     update_flag= false;
+    sihlouette_flag= false;
 
 
     for (i=1; i < argc ; i+=2) { //For every other argument
@@ -94,6 +95,9 @@ int read_cmd_args(int argc, char** argv, string& input_file, string& query_file,
         else if ((string)argv[i] == "-complete") {
             complete_flag= true;
         }
+        else if ((string)argv[i] == "-sihlouette") {
+            sihlouette_flag= true;
+        }
         else if ((string)argv[i] == "-assignment") {
             if ((string)argv[i+1] == "Classic" || (string)argv[i+1] == "classic"
                 || (string)argv[i+1] == "CLASSIC"){
@@ -136,6 +140,12 @@ int read_cmd_args(int argc, char** argv, string& input_file, string& query_file,
         cerr << "Algorithm not defined!" << endl;
         return -1;
     }*/
+    if ((string)argv[argc-1] == "-sihlouette"  || (string) argv[argc-2] == "-sihlouette") {
+        sihlouette_flag= true;
+    }
+    if ((string)argv[argc-1] == "-complete"  || (string) argv[argc-2] == "-complete") {
+        complete_flag= true;
+    }
     if (!assignment_flag && (string)argv[0] == "./cluster"){
         cerr << "Assignment method not defined!" << endl;
         return -1;

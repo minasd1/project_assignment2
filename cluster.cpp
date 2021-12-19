@@ -31,7 +31,7 @@ void k_means_plus_plus(int k, string assignment){
 }
 
 //IMPLEMENTATION OF THE LLOYDS ALGORITHM
-void lloyds(int number_of_clusters, fstream& output_file, string assignment, string update, double e, int max_length, engine gen, bool complete_flag)
+void lloyds(int number_of_clusters, fstream& output_file, string assignment, string update, double e, int max_length, engine gen, bool complete_flag, bool sihlouette_flag)
 {
     int i, dimensions, j, co;
     int nearest_centroid; //NEAREST CENTROID'S INDEX IN THE centroid TABLE
@@ -110,8 +110,10 @@ void lloyds(int number_of_clusters, fstream& output_file, string assignment, str
     }
     auto time_passed = std::chrono::duration_cast<std::chrono::seconds>(stop_time - start_time);
     output_file << "clustering_time: " << time_passed.count() << " seconds" << endl;
-    output_file << "Silhouette: ";
-    print_silhouette(previous_cluster_table, output_file, update);
+    if (sihlouette_flag) {
+        output_file << "Silhouette: ";
+        print_silhouette(previous_cluster_table, output_file, update);
+    }
     if (complete_flag) {
         for(i=0 ; i < number_of_clusters ; i++) {
             output_file << "CLUSTER-" << i+1 << " {size: " << previous_cluster_table[i].size();

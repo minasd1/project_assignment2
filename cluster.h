@@ -12,7 +12,7 @@
 using namespace std;
 
 void k_means_plus_plus(int k, string assignment);
-void lloyds(int number_of_clusters, fstream& output_file, string assignment, string update, double e, int max_length, engine gen, bool complete_flag);
+void lloyds(int number_of_clusters, fstream& output_file, string assignment, string update, double e, int max_length, engine gen, bool complete_flag, bool sihlouette_flag);
 void reverse_assignment_lloyds(vector<vector<int>>& cluster_table, int number_of_clusters, int num_of_curves, 
                                                                                             int last_id, string update);
 void reverse_assignment_lsh(G_Lsh g, fstream& output_file, int k, string assignment, string update, bool complete_flag);
