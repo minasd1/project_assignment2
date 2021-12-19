@@ -94,13 +94,10 @@ int main(int argc, char* argv[]){
                 
     read_path(input_file_name, query_file_name, output_file_name, algorithm, metric, 
                    datapath_given, query_given, output_given, algorithm_given, metric_given);
-    //cout << "Input: " << input_file_name << endl << "output: " << output_file_name << endl;
 
     unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
     default_random_engine generator(seed);
-
     open_file(&input_file, input_file_name, fstream::in);   //OPEN INPUT FILE
-
     while(getline(input_file, line)){                       //READ FILE LINE BY LINE
        
         pair<pair<string, int>, vector<double>> curve;      //CURRENT CURVE
@@ -247,7 +244,6 @@ int main(int argc, char* argv[]){
 
             //OPEN FILE TO WRITE RESULTS TO
             open_file(&output_file, output_file_name, fstream::out);
-
             finish = 0;
 
             maf= 0.0;
@@ -456,7 +452,6 @@ int main(int argc, char* argv[]){
             
             //OPEN FILE TO WRITE RESULTS TO
             open_file(&output_file, output_file_name, fstream::out);
-
             if (assignment == "Classic") {
 
                      lloyds(k_cluster, output_file, assignment, update, 

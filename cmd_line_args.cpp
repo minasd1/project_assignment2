@@ -92,12 +92,17 @@ int read_cmd_args(int argc, char** argv, string& input_file, string& query_file,
             c_flag= true;
             config_file= argv[i+1];
         }
-        else if ((string)argv[i] == "-complete") {
-            complete_flag= true;
+        else if (((string)argv[i] == "-sihlouette"  || (string)argv[i] == "-complete") && (i != argc-1   && i != argc-2) ) {
+            cerr << "Please give the \"-sihlouette\"  and \"-complete\" args in the end" << endl;
+            return -1;
         }
-        else if ((string)argv[i] == "-sihlouette") {
-            sihlouette_flag= true;
+        else if ((string) argv[i] == "-sihlouette") {
+            continue;
         }
+        else if ((string) argv[i] == "-complete") {
+            continue;
+        }
+
         else if ((string)argv[i] == "-assignment") {
             if ((string)argv[i+1] == "Classic" || (string)argv[i+1] == "classic"
                 || (string)argv[i+1] == "CLASSIC"){
@@ -154,7 +159,10 @@ int read_cmd_args(int argc, char** argv, string& input_file, string& query_file,
         cerr << "Update method not defined!" << endl;
         return -1;
     }
-    
+    if (!c_flag && (string) argv[0] == "./cluster") {
+        cerr << "Configuration file is missing!" << endl;
+        return -1;
+    }    
     if ((string)argv[0] == "search") {
             //Initialize missing arguments with default values
             if (!k_lsh_flag)
