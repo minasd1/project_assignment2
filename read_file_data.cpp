@@ -7,7 +7,7 @@ double file_get_max_value(fstream& file, string file_name){
     int num_of_values = 0;
     bool first_iteration = true;
     string line, token;
-    double max_value = 0;
+    double max_value = 0.0;
     double max_coordinate_value;
 
     open_file(&file, file_name, fstream::in);
@@ -54,7 +54,7 @@ double file_get_max_value(fstream& file, string file_name){
         first_iteration = false;
     }
 
-    max_coordinate_value = max(max_coordinate_value, (double)num_of_values);
+    max_coordinate_value = max(max_value, (double)num_of_values);
 
     file.clear();
     file.seekg(0, file.beg);

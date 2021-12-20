@@ -37,7 +37,7 @@ void insert_at_correct_place(vector<dist_id_pair>& table, dist_id_pair& pair)
     }
 
     table.push_back(dummy_pair);
-    for (j=table.size()-1; j >= i ; j--) {
+    for (j=table.size()-2; j >= i ; j--) {//-1
         table[j+1].dist= table[j].dist;
         table[j+1].id= table[j].id;
     }

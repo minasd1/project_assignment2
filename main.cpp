@@ -164,7 +164,7 @@ int main(int argc, char* argv[]){
     max_coordinate_value = max(max_value, (double)num_of_curve_values);
 
     if(strcmp(argv[0], "./search") == 0){
-
+   
         query_max_coordinate_value = file_get_max_value(query_file, query_file_name); 
         max_coordinate_value = max(max_coordinate_value, query_max_coordinate_value);
 
