@@ -31,7 +31,7 @@ void k_means_plus_plus(int k, string assignment){
 }
 
 //IMPLEMENTATION OF THE LLOYDS ALGORITHM
-void lloyds(int number_of_clusters, fstream& output_file, string assignment, string update, double e, int max_length, engine gen, bool complete_flag, bool sihlouette_flag)
+void lloyds(int number_of_clusters, fstream& output_file, string assignment, string update, double e, int max_length, engine gen, bool sihlouette_flag, bool complete_flag)
 {
     int i, dimensions, j, co;
     int nearest_centroid; //NEAREST CENTROID'S INDEX IN THE centroid TABLE
@@ -67,9 +67,8 @@ void lloyds(int number_of_clusters, fstream& output_file, string assignment, str
             update_as_vector(previous_cluster_table, last_known_id);
         }
         else if (update == "Mean_Frechet") {
-            // cout << "Update time " << co++ << "with change rate: " << change_rate << endl;
+
             update_as_curve(previous_cluster_table, gen, e, max_length, last_known_id);
-            // cout << "End of update time " << co-1 << endl;
         }
         
         //PREPARE THE NEW CLUSTER TABLE FOR THE NEW CENTROIDS ASSIGNMENT
@@ -80,10 +79,9 @@ void lloyds(int number_of_clusters, fstream& output_file, string assignment, str
         //MAKE A NEW ASSIGNMENT FOR ALL THE CURVES
         for (i=0 ; i < num_of_curves ; i++) { //FOR EVERY CURVE
             current_curve= curve_vector_get_curve(i);
-            // cout << "waiting here" << endl;
-            // cout << "current curve is" << i << endl;
+            
             nearest_centroid= find_nearest_centroid(current_curve, update);
-            // cout << "maybe waiting here" << endl;
+            
             //IF A CURVE IS BEING ASSIGNED IN A DIFFERENT CLUSTER THAN THE ONE IT WAS ASSIGNED IN THE PREVIOUS ASSIGNMENT
             if (!already_in_that_cluster(previous_cluster_table, nearest_centroid, current_curve.first.second)) {
                 changes_made++;
@@ -191,7 +189,7 @@ void reverse_assignment_lloyds(vector<vector<int>>& cluster_table, int number_of
 
 }
 
-void reverse_assignment_lsh(G_Lsh g, fstream& output_file, int k, string assignment, string update, bool complete_flag){
+void reverse_assignment_lsh(G_Lsh g, fstream& output_file, int k, string assignment, string update, bool silhouette_flag, bool complete_flag){
 
     pair<pair<string, int>, vector<double>> centroid; //HERE CENTROIDS ARE THE QUERY POINTS
     vector<int> appending_curves;        //NEW CURVES THAT WILL BE ADDED TO CLUSTERS   
@@ -301,8 +299,10 @@ void reverse_assignment_lsh(G_Lsh g, fstream& output_file, int k, string assignm
     }
     auto time_passed = std::chrono::duration_cast<std::chrono::seconds>(stop_time - start_time);
     output_file << "clustering_time: " << time_passed.count() << " seconds" << endl;
-    output_file << "Silhouette: ";
-    print_silhouette(cluster_table, output_file, update);
+    if(silhouette_flag){
+        output_file << "Silhouette: ";
+        print_silhouette(cluster_table, output_file, update);
+    }
     if (complete_flag) {
         for(i=0 ; i < centroids_get_size() ; i++) {
             output_file << "CLUSTER-" << i+1 << " {size: " << cluster_table[i].size();
@@ -322,7 +322,7 @@ void reverse_assignment_lsh(G_Lsh g, fstream& output_file, int k, string assignm
 
 }
 
-void reverse_assignment_cube(G_Hypercube g, fstream& output_file, int k, int probes, string assignment, string update, bool complete_flag){
+void reverse_assignment_cube(G_Hypercube g, fstream& output_file, int k, int probes, string assignment, string update, bool silhouette_flag, bool complete_flag){
 
     pair<pair<string, int>, vector<double>> centroid; //HERE CENTROIDS ARE THE QUERY POINTS
     vector<int> appending_curves;        //NEW CURVES THAT WILL BE ADDED TO CLUSTERS   
@@ -432,8 +432,10 @@ void reverse_assignment_cube(G_Hypercube g, fstream& output_file, int k, int pro
     }
     auto time_passed = std::chrono::duration_cast<std::chrono::seconds>(stop_time - start_time);
     output_file << "clustering_time: " << time_passed.count() << " seconds" << endl;
-    output_file << "Silhouette: ";
-    print_silhouette(cluster_table, output_file, update);
+    if(silhouette_flag){
+        output_file << "Silhouette: ";
+        print_silhouette(cluster_table, output_file, update);
+    }
     if (complete_flag) {
         for(i=0 ; i < centroids_get_size() ; i++) {
             output_file << "CLUSTER-" << i+1 << " {size: " << cluster_table[i].size();
@@ -453,7 +455,7 @@ void reverse_assignment_cube(G_Hypercube g, fstream& output_file, int k, int pro
 
 }
 
-void reverse_assignment_frechet(G_Frechet g, fstream& output_file, int k, string assignment, double e, int max_length, engine gen, bool complete_flag){
+void reverse_assignment_frechet(G_Frechet g, fstream& output_file, int k, string assignment, double e, int max_length, engine gen, bool silhouette_flag, bool complete_flag){
 
     pair<pair<string, int>, vector<double>> centroid; //HERE CENTROIDS ARE THE QUERY POINTS
     vector<int> appending_curves;        //NEW CURVES THAT WILL BE ADDED TO CLUSTERS   
@@ -574,8 +576,10 @@ void reverse_assignment_frechet(G_Frechet g, fstream& output_file, int k, string
     }
     auto time_passed = std::chrono::duration_cast<std::chrono::seconds>(stop_time - start_time);
     output_file << "clustering_time: " << time_passed.count() << " seconds" << endl;
-    output_file << "Silhouette: ";
-    print_silhouette(cluster_table, output_file, update);
+    if(silhouette_flag){
+        output_file << "Silhouette: ";
+        print_silhouette(cluster_table, output_file, update);
+    }
     if (complete_flag) {
         for(i=0 ; i < centroids_get_size() ; i++) {
             output_file << "CLUSTER-" << i+1 << " {size: " << cluster_table[i].size();

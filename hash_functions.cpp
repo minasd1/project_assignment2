@@ -240,13 +240,36 @@ void G_Frechet::hash(const pair<pair<string, int>, vector<double>>& curve, vecto
         
         if(grid_dimensions == 2){       //DISCRETE FRECHET
 
-            if((is_mean) && (curve.second.size() > max_length)){//FILTER IT TO AVOID BIG COMPLEXITY
-                filter(curve.second, filtered_curve.second, epsilon, is_mean);
-                snap_to_grid(filtered_curve,snapped_curve.second, grid_dimensions, i-1);
+            if(is_mean){//FILTER IT TO AVOID BIG COMPLEXITY
+                if( curve.second.size() > max_length){
+                    filter(curve.second, filtered_curve.second, epsilon, is_mean);
+                    snap_to_grid(filtered_curve,snapped_curve.second, grid_dimensions, i-1);
+                }
+                else{
+                    snap_to_grid(curve, snapped_curve.second, grid_dimensions, i-1);
+                }
+                //IT SHOULD BE STORED WITH THE SAME KEY LENGTH AS THE INPUT CURVES
+                if(snapped_curve.second.size() > max_length){
+                    this->filter(snapped_curve.second, filtered_curve.second, epsilon, is_mean);
+                    //HASH THE FILTERED CURVE USING LSH
+                    g.hash(filtered_curve, hash_values, is_query, 1);       
+                }
+                else if(snapped_curve.second.size() < max_length){
+                    padding(snapped_curve.second, grid_dimensions, extra_values_factor);
+                    g.hash(snapped_curve, hash_values, is_query, 1);
+                }
+                else{
+                    g.hash(snapped_curve, hash_values, is_query, 1);
+                }
+                
             }
             else{
                 //SNAP CURVE TO CURRENT GRID
                 snap_to_grid(curve, snapped_curve.second, grid_dimensions, i-1);
+                padding(snapped_curve.second, grid_dimensions, extra_values_factor);
+
+                //GET THE BUCKET THAT CURVE MUST BE INSERTED USING LSH HASHING
+                g.hash(snapped_curve, hash_values, is_query, 1);       //i CAN POSSIBLY BE A  BOOLEAN FLAG
             }
             
         }
@@ -255,28 +278,9 @@ void G_Frechet::hash(const pair<pair<string, int>, vector<double>>& curve, vecto
             snap_to_grid(filtered_curve,snapped_curve.second, grid_dimensions, i-1);
 
             minima_maxima(snapped_curve.second);
-        }
-        
-        if(!is_mean){//IF IT IS NOT A MEAN CURVE - CLUSTERING
-            padding(snapped_curve.second, grid_dimensions, extra_values_factor);
 
-            //GET THE BUCKET THAT CURVE MUST BE INSERTED USING LSH HASHING
-            g.hash(snapped_curve, hash_values, is_query, 1);       //i CAN POSSIBLY BE A  BOOLEAN FLAG
-        }
-        else{       //IF IT IS A MEAN CURVE
-            //IT SHOULD BE STORED WITH THE SAME KEY LENGTH AS THE INPUT CURVES
-            if(snapped_curve.second.size() > max_length){
-                this->filter(snapped_curve.second, filtered_curve.second, epsilon, is_mean);
-                //HASH THE FILTERED CURVE USING LSH
-                g.hash(filtered_curve, hash_values, is_query, 1);       
-            }
-            else if(snapped_curve.second.size() < max_length){
-                padding(snapped_curve.second, grid_dimensions, extra_values_factor);
-                g.hash(snapped_curve, hash_values, is_query, 1);
-            }
-            else{
-                g.hash(snapped_curve, hash_values, is_query, 1);
-            }
+            padding(snapped_curve.second, grid_dimensions, extra_values_factor);
+            g.hash(snapped_curve, hash_values, is_query, 1);
         }
         
         //IF IT'S A QUERY CURVE, GET IT'S IDS

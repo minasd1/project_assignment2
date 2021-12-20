@@ -10,8 +10,13 @@ int read_cmd_args(int argc, char** argv, string& input_file, string& query_file,
                       float& r, int& m, int& probes, string& config_file, string& assignment,
                       bool& complete_flag, string& algorithm, string& metric, double& delta, 
                       string& update, bool& datapath_given, bool& query_given, bool& output_given, 
-                      bool& algorithm_given, bool& metric_given, bool& sihlouette_flag)
+                      bool& algorithm_given, bool& metric_given, bool& silhouette_flag)
 {
+    if (argc < 3) {
+        cerr << "Arguments are missing!" << endl;
+        return -1;
+    }
+
     int i;
     bool k_lsh_flag, k_cube_flag, l_flag, n_flag, r_flag, probes_flag, delta_flag, m_flag, c_flag, 
          method_flag, assignment_flag, update_flag;
@@ -34,7 +39,7 @@ int read_cmd_args(int argc, char** argv, string& input_file, string& query_file,
     metric_given= false;
     delta_flag= false;
     update_flag= false;
-    sihlouette_flag= false;
+    silhouette_flag= false;
 
 
     for (i=1; i < argc ; i+=2) { //For every other argument
@@ -77,6 +82,15 @@ int read_cmd_args(int argc, char** argv, string& input_file, string& query_file,
             probes= stoi(argv[i+1]);
         }
         else if((string)argv[i] == "-algorithm") {
+            if ((string) argv[i+1] != "Classic" && (string) argv[i+1] != "classic" 
+              && (string) argv[i+1] != "LSH"    && (string) argv[i+1] != "Lsh"
+              && (string) argv[i+1] != "lsh"  && (string) argv[i+1] != "Hypercube"
+              && (string) argv[i+1] != "hypercube" && (string) argv[i+1] != "Frechet"
+              && (string) argv[i+1] != "frechet")
+            {
+                cerr << "Invalid algorithm given! {LSH, Hypercube, Frechet}" << endl;
+                return -1;
+            }
             algorithm_given= true;
             algorithm= argv[i+1];
         }
@@ -92,11 +106,11 @@ int read_cmd_args(int argc, char** argv, string& input_file, string& query_file,
             c_flag= true;
             config_file= argv[i+1];
         }
-        else if (((string)argv[i] == "-sihlouette"  || (string)argv[i] == "-complete") && (i != argc-1   && i != argc-2) ) {
-            cerr << "Please give the \"-sihlouette\"  and \"-complete\" args in the end" << endl;
+        else if (((string)argv[i] == "-silhouette"  || (string)argv[i] == "-complete") && (i != argc-1   && i != argc-2) ) {
+            cerr << "Please give the \"-silhouette\"  and \"-complete\" args in the end" << endl;
             return -1;
         }
-        else if ((string) argv[i] == "-sihlouette") {
+        else if ((string) argv[i] == "-silhouette") {
             continue;
         }
         else if ((string) argv[i] == "-complete") {
@@ -131,7 +145,7 @@ int read_cmd_args(int argc, char** argv, string& input_file, string& query_file,
                 return -1;
             }
         }
-        else if((string)argv[i] == "-update" && ((string) argv[i+1] != "Mean_Frechet" || (string) argv[i+1] != "Mean_Vector" )) {
+        else if((string)argv[i] == "-update" && ((string) argv[i+1] != "Mean_Frechet" && (string) argv[i+1] != "Mean_Vector" )) {
             cerr << "Please give the update method using one word (Mean_Frechet or Mean_Vector)" << endl;
             return -1;
         }
@@ -149,8 +163,8 @@ int read_cmd_args(int argc, char** argv, string& input_file, string& query_file,
         cerr << "Algorithm not defined!" << endl;
         return -1;
     }*/
-    if ((string)argv[argc-1] == "-sihlouette"  || (string) argv[argc-2] == "-sihlouette") {
-        sihlouette_flag= true;
+    if ((string)argv[argc-1] == "-silhouette"  || (string) argv[argc-2] == "-silhouette") {
+        silhouette_flag= true;
     }
     if ((string)argv[argc-1] == "-complete"  || (string) argv[argc-2] == "-complete") {
         complete_flag= true;

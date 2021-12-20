@@ -98,7 +98,7 @@ void filter(vector<double>& curve, double epsilon, int max_length);
 /*--------------------OPERATIONS BETWEEN VECTORS FUNCTIONS-----------------*/
 int calculate_dot_product(const pair<pair<string, int>, vector<double>>& curve, vector <int>& d_vector);
 vector<double> add_vectors(const vector<double>& curve1, const vector<double>& curve2);
-double calculate_distance(vector<double>& curve1, const vector<double>& curve2, int k=2);
+double calculate_distance(const vector<double>& curve1, const vector<double>& curve2, int k=2);
 
 /*-------------------------OTHER FUNCTIONS---------------------------------*/
 float calculate_partial_sums(vector<float>& min_distances, vector<float>& partial_sums);

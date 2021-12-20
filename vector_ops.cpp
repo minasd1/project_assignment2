@@ -159,7 +159,7 @@ void centroids_pick_first_centroid(){
     default_random_engine generator(seed);
 
     //WE USE UNIFORM DISTRIBUTION TO GET A POINT FROM INPUT POINTS
-    uniform_int_distribution<int> p_distribution(1, curve_vector.size());
+    uniform_int_distribution<int> p_distribution(0, curve_vector.size()-1);
 
     first_centroid_id = p_distribution(generator);
 
@@ -825,7 +825,7 @@ vector<double> add_vectors(const vector<double>& curve1, const vector<double>& c
 }
 
 //COMPUTES THE DISTANCE BETWEEN 2 VECTORS USING THE k-NORM
-double calculate_distance(vector<double>& curve1, const vector<double>& curve2, int k)
+double calculate_distance(const vector<double>& curve1, const vector<double>& curve2, int k)
 {
     double distance = 0.0;
     double sum = 0;

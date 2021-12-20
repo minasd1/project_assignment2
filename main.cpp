@@ -56,7 +56,7 @@ int main(int argc, char* argv[]){
     
     bool is_query_curve, is_mean_curve, first_iteration, complete_flag, new_query_file, 
          flag_frechet_cluster, datapath_given, query_given, output_given, algorithm_given,
-         metric_given, sihlouette_flag;
+         metric_given, silhouette_flag;
 
     unsigned int hash_value, number_of_curves ;
  
@@ -86,7 +86,7 @@ int main(int argc, char* argv[]){
     error= read_cmd_args(argc, argv, input_file_name, query_file_name, k, k_cube, L, output_file_name, 
                   N, R, M_cube, probes, config_file_name, assignment, complete_flag, algorithm, 
                   metric, delta, update, datapath_given, query_given, output_given, algorithm_given,
-                  metric_given, sihlouette_flag);
+                  metric_given, silhouette_flag);
 
     if (error) {
         return -1;
@@ -454,20 +454,20 @@ int main(int argc, char* argv[]){
             open_file(&output_file, output_file_name, fstream::out);
             if (assignment == "Classic") {
 
-                     lloyds(k_cluster, output_file, assignment, update, 
-                     epsilon, max_mean_curve_length, generator, complete_flag, sihlouette_flag);
+                lloyds(k_cluster, output_file, assignment, update, 
+                epsilon, max_mean_curve_length, generator, silhouette_flag, complete_flag);
             }
             else if(assignment == "LSH"){
-                reverse_assignment_lsh(g_lsh, output_file, k_cluster, assignment, update, complete_flag);
+                reverse_assignment_lsh(g_lsh, output_file, k_cluster, assignment, update, silhouette_flag, complete_flag);
             }
             else if(assignment == "Hypercube"){
 
-                reverse_assignment_cube(g_cube, output_file, k_cluster, probes, assignment, update, complete_flag);
+                reverse_assignment_cube(g_cube, output_file, k_cluster, probes, assignment, update, silhouette_flag, complete_flag);
             }
             else if(assignment == "LSH_Frechet"){
 
                 reverse_assignment_frechet(g_frechet, output_file, k_cluster, assignment, epsilon, 
-                                            max_mean_curve_length, generator, complete_flag);
+                                            max_mean_curve_length, generator, silhouette_flag, complete_flag);
             }
             
 
