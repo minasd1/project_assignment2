@@ -48,9 +48,8 @@ int find_nearest_centroid(pair<pair<string, int>, vector<double>>& current_curve
         min_distance= calculate_distance(current_curve.second, other_curve.second);
     }
     else if (update == "Mean_Frechet") {
-            // cout << "waiting for dfd calculation with centroid 0" << endl;
-            min_distance= curve_calculate_dfd(current_curve.second, other_curve.second);
-            // cout << "confirm the waiting" << endl;
+            
+        min_distance= curve_calculate_dfd(current_curve.second, other_curve.second);
     }
     
     nearest_centroid= 0;
@@ -61,9 +60,8 @@ int find_nearest_centroid(pair<pair<string, int>, vector<double>>& current_curve
             distance= calculate_distance(current_curve.second, other_curve.second);
         }
         else if (update == "Mean_Frechet") {
-            // cout << "waiting for centroid " << i << "dfd calculation" << endl;
+            
             distance= curve_calculate_dfd(current_curve.second, other_curve.second);
-            // cout << "confirm in waiting in one of the centroids" << endl;
         }
         if (distance < min_distance) {
             min_distance= distance;

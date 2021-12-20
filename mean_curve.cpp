@@ -102,7 +102,7 @@ pair<pair<string,int>, vector<double>> reach_the_peak (const int& floors_to_the_
     pair <pair<string, int>, vector<double>> mean_curve;
 
     for (i= floors_to_the_peak ; i > 0 ; i--) {
-        // cout << "Current Level is" << floors_to_the_peak-i << endl;
+        
         for (j= 0 ; j < curves[i].size() ; j+=2) {
             //IF BOTH CURVES EXIST
             if (curves[i][j].first.first != "NULL" && curves[i][j+1].first.first != "NULL") {
@@ -112,7 +112,6 @@ pair<pair<string,int>, vector<double>> reach_the_peak (const int& floors_to_the_
                     filter(mean_curve.second, e,  max_length);
                 } 
                 curves[i-1][j/2]= mean_curve;
-                // cout << "\n\nLENGHT: " << curves[i-1][j/2].second.size() << "\n\n" << endl;
               
                 curves[i-1][j/2].first.first= "MEAN";
                 
